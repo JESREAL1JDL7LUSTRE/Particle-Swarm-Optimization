@@ -1,0 +1,1533 @@
+#!/usr/bin/env python3
+"""
+Generate a comprehensive, interactive step-by-step HTML visualizer:
+'presentation/pso_step_by_step_visualizer.html'
+Includes:
+- Google Maps (Roads & Satellite) + CartoDB Dark Matter basemaps via Leaflet
+- Step-by-step navigation (Next / Back / Play / Reset)
+- Animated vehicle traveling along real OSRM road geometry
+- Directed graph visualization (56 arcs with weights in km)
+- Interactive 8x8 weight matrix with clickable cell routing
+- Step-by-step mathematical calculation cards for PSO 2.4 (Random Key & Velocity equations)
+- Exact Google Maps verified coordinates and landmark cards
+"""
+
+import csv
+import json
+from pathlib import Path
+
+ROOT = Path("/Users/macbookpro/Desktop/CS/4th Yr/Graph Theory/PIT/Particle-Swarm-Optimization")
+
+def build_visualizer():
+    # 1. Load Locations
+    with (ROOT / "cdo_tsp_locations.csv").open(newline="") as f:
+        locations = list(csv.DictReader(f))
+    for r in locations:
+        r["Route_Latitude"] = float(r["Route_Latitude"])
+        r["Route_Longitude"] = float(r["Route_Longitude"])
+
+    # 2. Load 8x8 Distance Matrix (in km) and duration (in s)
+    matrix = [[0.0] * 8 for _ in range(8)]
+    matrix_m = [[0.0] * 8 for _ in range(8)]
+    with (ROOT / "cdo_tsp_dataset.csv").open(newline="") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            u = int(r["From_Node"].replace("V", ""))
+            v = int(r["To_Node"].replace("V", ""))
+            m = float(r["Distance_m"])
+            matrix_m[u][v] = m
+            matrix[u][v] = round(m / 1000.0, 2)
+
+    # 3. Load Tour Summary
+    with (ROOT / "results/summary.json").open() as f:
+        summary = json.load(f)
+    pso_tour = summary["pso_tour"] # [0, 3, 4, 7, 6, 5, 2, 1]
+
+    # 4. Load OSRM Road Geometries for Tour Legs
+    routes_file = ROOT / "data/routes.geojson"
+    features = json.loads(routes_file.read_text())["features"] if routes_file.exists() else []
+    routes_dict = {(f["properties"]["from"], f["properties"]["to"]): f["geometry"]["coordinates"] for f in features}
+
+    tour_legs = []
+    n = len(pso_tour)
+    for i in range(n):
+        u = pso_tour[i]
+        v = pso_tour[(i + 1) % n]
+        key = (f"V{u}", f"V{v}")
+        pts = routes_dict.get(key, [])
+        # Leaflet uses [lat, lon], geojson uses [lon, lat]
+        lat_lngs = [[pt[1], pt[0]] for pt in pts]
+        tour_legs.append({
+            "leg_index": i + 1,
+            "from_node": f"V{u}",
+            "to_node": f"V{v}",
+            "from_name": locations[u]["Location_Name"],
+            "to_name": locations[v]["Location_Name"],
+            "from_street": locations[u]["Street_Or_District"],
+            "to_street": locations[v]["Street_Or_District"],
+            "distance_km": matrix[u][v],
+            "distance_m": matrix_m[u][v],
+            "path": lat_lngs
+        })
+
+    # Prepare JS data objects
+    locations_json = json.dumps(locations)
+    matrix_json = json.dumps(matrix)
+    tour_legs_json = json.dumps(tour_legs)
+    summary_json = json.dumps(summary)
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CDO TSP - Step-by-Step PSO Interactive Visualizer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {{
+      --bg-dark: #070d19;
+      --panel-bg: rgba(15, 23, 42, 0.95);
+      --card-bg: #1e293b;
+      --card-hover: #334155;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-cyan: #22d3ee;
+      --accent-teal: #14b8a6;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+    }}
+
+    * {{
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }}
+
+    body {{
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }}
+
+    /* Top Navigation Header */
+    header.app-header {{
+      height: 52px;
+      background: rgba(11, 21, 35, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 1000;
+    }}
+
+    .header-left {{
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }}
+
+    .badge-course {{
+      background: rgba(34, 211, 238, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }}
+
+    .header-title {{
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }}
+
+    .header-right {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }}
+
+    .btn {{
+      background: #1e293b;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }}
+
+    .btn:hover {{
+      background: #334155;
+      border-color: var(--accent-cyan);
+      color: #ffffff;
+    }}
+
+    .btn-primary {{
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+    }}
+
+    .btn-primary:hover {{
+      background: #0369a1;
+    }}
+
+    .btn-success {{
+      background: #059669;
+      border-color: #34d399;
+      color: #ffffff;
+    }}
+
+    .btn-success:hover {{
+      background: #047857;
+    }}
+
+    .btn-rose {{
+      background: #e11d48;
+      border-color: #fb7185;
+      color: #ffffff;
+    }}
+
+    /* Main Workspace Layout */
+    .workspace {{
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 52px);
+      position: relative;
+    }}
+
+    /* Map Stage (Left) */
+    .map-pane {{
+      flex: 1.35;
+      position: relative;
+      background: #000;
+      height: 100%;
+    }}
+
+    #map {{
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }}
+
+    /* Map Overlay Floating HUD */
+    .map-hud {{
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 999;
+      background: rgba(15, 23, 42, 0.90);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      max-width: 320px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }}
+
+    .hud-title {{
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }}
+
+    .hud-stat {{
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      color: var(--text-muted);
+    }}
+
+    .hud-stat strong {{
+      color: var(--text-main);
+    }}
+
+    /* Layer Controls on Map */
+    .map-layer-switch {{
+      position: absolute;
+      bottom: 20px;
+      left: 14px;
+      z-index: 999;
+      background: rgba(15, 23, 42, 0.90);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      gap: 8px;
+    }}
+
+    /* Vehicle Speedometer / Ticker HUD */
+    .speedo-hud {{
+      position: absolute;
+      bottom: 20px;
+      right: 14px;
+      z-index: 999;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(34, 211, 238, 0.4);
+      border-radius: 10px;
+      padding: 10px 16px;
+      text-align: right;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    }}
+
+    .speedo-val {{
+      font-family: 'Fira Code', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }}
+
+    .speedo-lbl {{
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }}
+
+    /* Control Panel & Calculation Inspector (Right) */
+    .inspector-pane {{
+      flex: 1.0;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      z-index: 10;
+    }}
+
+    /* Step Navigation Controller Bar */
+    .nav-controller {{
+      padding: 16px 20px;
+      background: rgba(15, 23, 42, 0.98);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }}
+
+    .controller-buttons {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }}
+
+    .btn-nav {{
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      justify-content: center;
+      border-radius: 8px;
+    }}
+
+    .step-indicator-wrapper {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }}
+
+    .step-progress-bar {{
+      flex: 1;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      overflow: hidden;
+    }}
+
+    .step-progress-fill {{
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-teal));
+      width: 0%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }}
+
+    .step-badge {{
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      white-space: nowrap;
+    }}
+
+    /* Tabs Bar */
+    .tabs-bar {{
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      background: #0b1523;
+    }}
+
+    .tab-btn {{
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      text-align: center;
+    }}
+
+    .tab-btn:hover {{
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.02);
+    }}
+
+    .tab-btn.active {{
+      color: var(--accent-cyan);
+      border-bottom-color: var(--accent-cyan);
+      background: rgba(34, 211, 238, 0.05);
+    }}
+
+    /* Tab Contents */
+    .tab-content {{
+      padding: 20px;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }}
+
+    .tab-content.active {{
+      display: flex;
+    }}
+
+    /* Step Card */
+    .step-card {{
+      background: #111e33;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    }}
+
+    .step-phase-tag {{
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--accent-teal);
+      margin-bottom: 2px;
+    }}
+
+    .step-title {{
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.35;
+    }}
+
+    .step-desc {{
+      font-size: 13px;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }}
+
+    /* Math / Calculation Formula Box */
+    .calc-box {{
+      background: #091322;
+      border-left: 3px solid var(--accent-cyan);
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      overflow-x: auto;
+    }}
+
+    .calc-hl {{
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }}
+
+    .calc-gold {{
+      color: var(--accent-amber);
+      font-weight: 700;
+    }}
+
+    .calc-green {{
+      color: var(--accent-emerald);
+      font-weight: 700;
+    }}
+
+    .calc-rose {{
+      color: var(--accent-rose);
+      font-weight: 700;
+    }}
+
+    /* Metric Grid */
+    .metric-grid {{
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }}
+
+    .metric-card {{
+      background: #0d1b2e;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }}
+
+    .metric-card-label {{
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }}
+
+    .metric-card-val {{
+      font-family: 'Fira Code', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+    }}
+
+    /* Interactive Weight Matrix Table */
+    .matrix-table-container {{
+      overflow-x: auto;
+      max-height: 480px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }}
+
+    table.matrix-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+    }}
+
+    table.matrix-table th, table.matrix-table td {{
+      padding: 8px 6px;
+      border: 1px solid #1e293b;
+    }}
+
+    table.matrix-table th {{
+      background: #111e33;
+      color: var(--accent-cyan);
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }}
+
+    table.matrix-table td.diag {{
+      background: #0b1523;
+      color: #475569;
+    }}
+
+    table.matrix-table td.cell-cost {{
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: #0e1d31;
+    }}
+
+    table.matrix-table td.cell-cost:hover {{
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: bold;
+    }}
+
+    table.matrix-table td.cell-tour {{
+      background: rgba(20, 184, 166, 0.25);
+      border: 1px solid var(--accent-teal);
+      color: #5eead4;
+      font-weight: 700;
+    }}
+
+    table.matrix-table td.cell-active-leg {{
+      background: rgba(244, 63, 94, 0.4);
+      border: 2px solid var(--accent-rose);
+      color: #ffffff;
+      font-weight: 800;
+    }}
+
+    /* Vertex List Items */
+    .vertex-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }}
+
+    .vertex-item {{
+      background: #0e1d31;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }}
+
+    .vertex-item:hover, .vertex-item.active {{
+      background: #132742;
+      border-color: var(--accent-cyan);
+    }}
+
+    .node-pin-badge {{
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 11px;
+      color: #fff;
+      flex-shrink: 0;
+    }}
+
+    .vertex-info {{
+      flex: 1;
+    }}
+
+    .vertex-name {{
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+    }}
+
+    .vertex-sub {{
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }}
+
+    /* Custom Leaflet Pulsing Markers & Tooltips */
+    .pin-label {{
+      background: rgba(11, 21, 35, 0.92);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }}
+
+    .car-marker-icon {{
+      font-size: 22px;
+      filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.8));
+      text-align: center;
+      transition: transform 0.1s linear;
+    }}
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {{
+      width: 6px;
+      height: 6px;
+    }}
+    ::-webkit-scrollbar-track {{
+      background: #0b1523;
+    }}
+    ::-webkit-scrollbar-thumb {{
+      background: #334155;
+      border-radius: 3px;
+    }}
+    ::-webkit-scrollbar-thumb:hover {{
+      background: #475569;
+    }}
+  </style>
+</head>
+<body>
+
+  <!-- Top App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="badge-course">Graph Theory PIT</span>
+      <h1 class="header-title">Cagayan de Oro TSP: Step-by-Step PSO Calculation & Map Visualizer</h1>
+    </div>
+    <div class="header-right">
+      <button class="btn" id="btn-toggle-topology" onclick="toggleTopologyLayer()">🕸️ Toggle Digraph Arcs</button>
+      <a href="index.html" class="btn btn-primary">📊 View Slide Deck (PPT)</a>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <div class="workspace">
+
+    <!-- Left Map Stage -->
+    <div class="map-pane">
+      <div id="map"></div>
+
+      <!-- Floating HUD -->
+      <div class="map-hud">
+        <div class="hud-title">📍 Cagayan de Oro Tourist Route</div>
+        <div class="hud-stat">Active Step: <strong id="hud-step-title">Initializing...</strong></div>
+        <div class="hud-stat">Current Mode: <strong id="hud-mode-name">OSRM Road Geometry</strong></div>
+        <div class="hud-stat">Basemap: <strong id="hud-basemap-name">Google Maps (Roads)</strong></div>
+      </div>
+
+      <!-- Speedometer & Cumulative Distance HUD -->
+      <div class="speedo-hud">
+        <div class="speedo-val" id="hud-odometer">0.00 km</div>
+        <div class="speedo-lbl">Cumulative Distance Traveled</div>
+        <div style="font-size: 11px; color: var(--accent-teal); font-weight: 600; margin-top: 2px;" id="hud-leg-stat">
+          Ready to calculate
+        </div>
+      </div>
+
+      <!-- Map Layer Switch -->
+      <div class="map-layer-switch">
+        <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="setBasemap('google')">Google Roads</button>
+        <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="setBasemap('satellite')">Satellite</button>
+        <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="setBasemap('carto')">Dark Night</button>
+      </div>
+    </div>
+
+    <!-- Right Inspector & Calculation Pane -->
+    <div class="inspector-pane">
+
+      <!-- Navigation Controller -->
+      <div class="nav-controller">
+        <div class="controller-buttons">
+          <button class="btn btn-nav" id="btn-prev" onclick="prevStep()">◀ Back</button>
+          <button class="btn btn-nav btn-success" id="btn-play" onclick="togglePlay()">▶ Auto-Play</button>
+          <button class="btn btn-nav btn-primary" id="btn-next" onclick="nextStep()">Next Step ▶</button>
+          <button class="btn" style="padding: 10px;" title="Reset Tour" onclick="resetToStep(0)">↺</button>
+        </div>
+
+        <div class="step-indicator-wrapper">
+          <span class="step-badge" id="step-badge">STEP 0 / 12</span>
+          <div class="step-progress-bar">
+            <div class="step-progress-fill" id="step-progress-fill"></div>
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted);">Use [←] / [→] keys</span>
+        </div>
+      </div>
+
+      <!-- Tabs Bar -->
+      <div class="tabs-bar">
+        <button class="tab-btn active" onclick="switchTab('tab-step')">📝 Step Calculation</button>
+        <button class="tab-btn" onclick="switchTab('tab-matrix')">📊 8×8 Weight Matrix</button>
+        <button class="tab-btn" onclick="switchTab('tab-vertices')">🏛️ Destination Pins</button>
+      </div>
+
+      <!-- Tab 1: Step Walkthrough & Calculation -->
+      <div class="tab-content active" id="tab-step">
+        <div class="step-card">
+          <span class="step-phase-tag" id="card-phase">PHASE 1: PROBLEM FORMULATION</span>
+          <h2 class="step-title" id="card-title">Initial Input: 8 Uncalculated Destinations</h2>
+          <p class="step-desc" id="card-desc">
+            We begin with 8 candidate tourist destinations across Cagayan de Oro City. At this stage, no tour path has been evaluated.
+          </p>
+
+          <div class="calc-box" id="card-calc">
+            // Graph Definition:
+            G = (V, A, W)
+            |V| = 8 vertices
+            |A| = 56 directed travel arcs (asymmetric)
+            Depot = V0: Plaza Divisoria (Start and Terminal return)
+          </div>
+
+          <div class="metric-grid" id="card-metrics">
+            <div class="metric-card">
+              <div class="metric-card-label">Current Leg</div>
+              <div class="metric-card-val" id="metric-leg">—</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-card-label">Leg Driving Cost</div>
+              <div class="metric-card-val" id="metric-cost">0.00 km</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-card-label">Cumulative Total</div>
+              <div class="metric-card-val" id="metric-total">0.00 km</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-card-label">PSO Target Optimum</div>
+              <div class="metric-card-val" style="color: var(--accent-emerald);">36.47 km</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card" id="card-note-box" style="background: #091322; border-color: #1e3a5f;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 4px;" id="card-note-title">
+            💡 Graph Theory & PSO Context
+          </div>
+          <div style="font-size: 12px; color: #94a3b8; line-height: 1.5;" id="card-note-content">
+            Press <strong>Next Step ▶</strong> to proceed through the graph network construction, weight matrix inspection, continuous particle position encoding, and the leg-by-leg animated driving traversal.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: 8x8 Weight Matrix -->
+      <div class="tab-content" id="tab-matrix">
+        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+          <strong>Asymmetric Weight Matrix $W \in \mathbb{R}^{{8 \times 8}}$ (Shortest Car Route Distance in km)</strong><br>
+          Click any cell to route and highlight that directed path on the map.
+        </div>
+        <div class="matrix-table-container">
+          <table class="matrix-table" id="matrix-table">
+            <!-- Dynamically generated via JS -->
+          </table>
+        </div>
+        <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
+          * Asymmetry Proof: Notice $W(V_0, V_1) = 0.63\text{{ km}}$ while $W(V_1, V_0) = 0.36\text{{ km}}$ due to one-way traffic along RN Capistrano St.
+        </div>
+      </div>
+
+      <!-- Tab 3: Destination Pins List -->
+      <div class="tab-content" id="tab-vertices">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+          All 8 coordinates verified on <strong>Google Maps</strong> with entrance landmarks:
+        </div>
+        <div class="vertex-list" id="vertex-list">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Embedded Datasets
+    const locations = {locations_json};
+    const matrix = {matrix_json};
+    const tourLegs = {tour_legs_json};
+    const summary = {summary_json};
+
+    // Color Palette matching slides
+    const PIN_COLORS = {{
+      "V0": "#ef4444", // Depot Red
+      "V1": "#06b6d4", // Cyan
+      "V2": "#10b981", // Emerald
+      "V3": "#f59e0b", // Amber
+      "V4": "#a855f7", // Purple
+      "V5": "#0284c7", // Sky Blue
+      "V6": "#ea580c", // Coral Orange
+      "V7": "#22c55e", // Green
+    }};
+
+    // 1. Initialize Map
+    const map = L.map('map', {{
+      center: [8.455, 124.665],
+      zoom: 13,
+      zoomControl: true
+    }});
+
+    // Basemaps
+    const googleRoads = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={{x}}&y={{y}}&z={{z}}', {{
+      maxZoom: 20,
+      attribution: '&copy; Google Maps'
+    }}).addTo(map);
+
+    const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={{x}}&y={{y}}&z={{z}}', {{
+      maxZoom: 20,
+      attribution: '&copy; Google Maps Satellite'
+    }});
+
+    const cartoDark = L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+      maxZoom: 19,
+      subdomains: 'abcd',
+      attribution: '&copy; CARTO'
+    }});
+
+    function setBasemap(type) {{
+      map.removeLayer(googleRoads);
+      map.removeLayer(googleHybrid);
+      map.removeLayer(cartoDark);
+      if (type === 'google') {{
+        googleRoads.addTo(map);
+        document.getElementById('hud-basemap-name').textContent = "Google Maps (Roads)";
+      }} else if (type === 'satellite') {{
+        googleHybrid.addTo(map);
+        document.getElementById('hud-basemap-name').textContent = "Google Maps (Satellite)";
+      }} else {{
+        cartoDark.addTo(map);
+        document.getElementById('hud-basemap-name').textContent = "CartoDB Dark Matter";
+      }}
+    }}
+
+    // Layer Groups
+    const markersLayer = L.layerGroup().addTo(map);
+    const tourPathLayer = L.layerGroup().addTo(map);
+    const topologyArcsLayer = L.layerGroup();
+    let carMarker = null;
+
+    // Build Markers
+    const markerMap = {{}};
+    locations.forEach((p, idx) => {{
+      const isDepot = (p.Node_ID === "V0");
+      const color = PIN_COLORS[p.Node_ID];
+      
+      const iconHtml = `
+        <div style="
+          width: ${{isDepot ? 36 : 28}}px;
+          height: ${{isDepot ? 36 : 28}}px;
+          border-radius: 50%;
+          background: ${{color}};
+          border: 3px solid #ffffff;
+          box-shadow: 0 0 14px ${{color}}, 0 4px 8px rgba(0,0,0,0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 800;
+          font-size: ${{isDepot ? 13 : 11}}px;
+          color: #ffffff;
+          cursor: pointer;
+        ">${{p.Node_ID}}</div>
+      `;
+
+      const customIcon = L.divIcon({{
+        className: 'custom-pin-marker',
+        html: iconHtml,
+        iconSize: [isDepot ? 36 : 28, isDepot ? 36 : 28],
+        iconAnchor: [isDepot ? 18 : 14, isDepot ? 18 : 14]
+      }});
+
+      const m = L.marker([p.Route_Latitude, p.Route_Longitude], {{ icon: customIcon }}).addTo(markersLayer);
+      
+      m.bindTooltip(`<b>${{p.Node_ID}}: ${{p.Location_Name}}</b><br><span style="color:#94a3b8">${{p.Street_Or_District}}</span>`, {{
+        direction: 'top',
+        offset: [0, -16],
+        className: 'pin-label'
+      }});
+
+      m.on('click', () => {{
+        focusNode(p.Node_ID);
+      }});
+
+      markerMap[p.Node_ID] = m;
+    }});
+
+    // Build Complete 56 Directed Digraph Arcs (straight connecting lines)
+    for (let i = 0; i < 8; i++) {{
+      for (let j = 0; j < 8; j++) {{
+        if (i !== j) {{
+          const p1 = [locations[i].Route_Latitude, locations[i].Route_Longitude];
+          const p2 = [locations[j].Route_Latitude, locations[j].Route_Longitude];
+          const arc = L.polyline([p1, p2], {{
+            color: '#38bdf8',
+            weight: 1,
+            opacity: 0.22,
+            dashArray: '3, 6'
+          }}).bindTooltip(`${{locations[i].Node_ID}} → ${{locations[j].Node_ID}}: <b>${{matrix[i][j]}} km</b>`);
+          topologyArcsLayer.addLayer(arc);
+        }}
+      }}
+    }}
+
+    let topologyVisible = false;
+    function toggleTopologyLayer() {{
+      topologyVisible = !topologyVisible;
+      if (topologyVisible) {{
+        map.addLayer(topologyArcsLayer);
+        document.getElementById('btn-toggle-topology').style.borderColor = "var(--accent-cyan)";
+        document.getElementById('btn-toggle-topology').textContent = "🕸️ Hide Digraph Arcs";
+      }} else {{
+        map.removeLayer(topologyArcsLayer);
+        document.getElementById('btn-toggle-topology').style.borderColor = "var(--border-color)";
+        document.getElementById('btn-toggle-topology').textContent = "🕸️ Toggle Digraph Arcs";
+      }}
+    }}
+
+    // Render Matrix Table
+    function renderMatrixTable(activeLegIdx = -1) {{
+      const tbody = document.getElementById('matrix-table');
+      let html = '<tr><th>Orig \\ Dest</th>';
+      for (let j = 0; j < 8; j++) {{
+        html += `<th>V${{j}}</th>`;
+      }}
+      html += '</tr>';
+
+      // Tour legs set for highlighting
+      const tourLegPairs = new Set(tourLegs.map(l => `${{l.from_node}}-${{l.to_node}}`));
+      const activePair = (activeLegIdx >= 1 && activeLegIdx <= 8) 
+        ? `${{tourLegs[activeLegIdx - 1].from_node}}-${{tourLegs[activeLegIdx - 1].to_node}}` 
+        : null;
+
+      for (let i = 0; i < 8; i++) {{
+        html += `<tr><th>V${{i}}</th>`;
+        for (let j = 0; j < 8; j++) {{
+          if (i === j) {{
+            html += `<td class="diag">0.00</td>`;
+          }} else {{
+            const pairKey = `V${{i}}-V${{j}}`;
+            let cls = 'cell-cost';
+            if (pairKey === activePair) {{
+              cls += ' cell-active-leg';
+            }} else if (tourLegPairs.has(pairKey)) {{
+              cls += ' cell-tour';
+            }}
+            html += `<td class="${{cls}}" onclick="previewArc(${{i}}, ${{j}})">${{matrix[i][j].toFixed(2)}}</td>`;
+          }}
+        }}
+        html += '</tr>';
+      }}
+      tbody.innerHTML = html;
+    }}
+
+    // Render Vertex List
+    function renderVertexList() {{
+      const container = document.getElementById('vertex-list');
+      let html = '';
+      locations.forEach(p => {{
+        const color = PIN_COLORS[p.Node_ID];
+        html += `
+          <div class="vertex-item" id="item-${{p.Node_ID}}" onclick="focusNode('${{p.Node_ID}}')">
+            <div class="node-pin-badge" style="background: ${{color}};">${{p.Node_ID}}</div>
+            <div class="vertex-info">
+              <div class="vertex-name">${{p.Location_Name}}</div>
+              <div class="vertex-sub">${{p.Street_Or_District}} &bull; (${{p.Route_Latitude.toFixed(4)}}°N, ${{p.Route_Longitude.toFixed(4)}}°E)</div>
+            </div>
+          </div>
+        `;
+      }});
+      container.innerHTML = html;
+    }}
+
+    function focusNode(nodeId) {{
+      const p = locations.find(l => l.Node_ID === nodeId);
+      if (p) {{
+        map.flyTo([p.Route_Latitude, p.Route_Longitude], 16, {{ duration: 1.2 }});
+        markerMap[nodeId].openTooltip();
+        switchTab('tab-vertices');
+        document.querySelectorAll('.vertex-item').forEach(el => el.classList.remove('active'));
+        const el = document.getElementById(`item-${{nodeId}}`);
+        if (el) el.classList.add('active');
+      }}
+    }}
+
+    function previewArc(i, j) {{
+      const p1 = [locations[i].Route_Latitude, locations[i].Route_Longitude];
+      const p2 = [locations[j].Route_Latitude, locations[j].Route_Longitude];
+      map.flyToBounds([p1, p2], {{ padding: [60, 60], duration: 1 }});
+      alert(`Directed Arc: V${{i}} (${{locations[i].Location_Name}}) → V${{j}} (${{locations[j].Location_Name}})\nShortest Driving Cost: ${{matrix[i][j]}} km (${{matrix_m[i][j].toFixed(1)}} meters)`);
+    }}
+
+    // =========================================================================
+    // STEP DEFINITIONS (0 to 12)
+    // =========================================================================
+    const STEPS = [
+      {{
+        phase: "PHASE 1: PROBLEM FORMULATION",
+        title: "Step 0: Pinpointing 8 Uncalculated Candidate Destinations",
+        desc: "We begin with 8 candidate tourist destinations across Cagayan de Oro City. All GPS coordinates were retrieved and verified on Google Maps. At this initial phase, no tour has been computed.",
+        calc: `// Vertex Set Definition:
+V = {V0, V1, V2, V3, V4, V5, V6, V7}
+|V| = 8 discrete destination nodes in Cagayan de Oro
+Depot: V0 = Plaza Divisoria (Central Start & Return Point)
+Verified Coordinates:
+V0: 8.4779°N, 124.6438°E (Divisoria)
+V6: 8.4231°N, 124.6575°E (Amaya View, Indahag)
+V7: 8.4581°N, 124.6999°E (Gardens of Malasag, Cugman)`,
+        noteTitle: "📍 Pre-Calculation Input",
+        note: "Notice the map displays only the destination pins without connecting route lines. The downtown heritage cluster (V0–V3) is separated by only 100–500 meters, while highland destinations (V6, V7) span over 10 km.",
+        zoom: [8.455, 124.665],
+        zoomLevel: 13,
+        legIndex: -1,
+        cumKm: 0.00
+      }},
+      {{
+        phase: "PHASE 2: DIRECTED ROAD NETWORK & WEIGHT MATRIX",
+        title: "Step 1: Directed Arc Network & Complete 8×8 Weight Matrix",
+        desc: "Travel between destinations is governed by CDO's physical street network. Because of one-way streets downtown and divided dual-carriageway highways with restricted median U-turns, the graph is strictly DIRECTED ($W(V_i, V_j) \\neq W(V_j, V_i)$).",
+        calc: `// Complete Digraph:
+A = {(Vi, Vj) ∈ V × V | i ≠ j}
+|A| = 8 × 7 = 56 directed arcs
+Edge Weight Function: W(Vi, Vj) = Shortest OSRM Car Route Distance (km)
+
+// Asymmetry Proof:
+W(V0 → V1) = 0.63 km  ≠  W(V1 → V0) = 0.36 km
+W(V1 → V2) = 0.13 km  ≠  W(V2 → V1) = 0.16 km
+W(V0 → V3) = 0.36 km  ≠  W(V3 → V0) = 0.49 km`,
+        noteTitle: "📊 Directed Asymmetry in Practice",
+        note: "Explore the '8×8 Weight Matrix' tab above. Notice all diagonal values are 0.00 km, and opposing direction cells differ due to real street topography.",
+        zoom: [8.460, 124.660],
+        zoomLevel: 13,
+        legIndex: -1,
+        cumKm: 0.00
+      }},
+      {{
+        phase: "PHASE 3: CONTINUOUS PSO TO DISCRETE PERMUTATION MAPPING",
+        title: "Step 2: Continuous Particle Swarm Representation (Algorithm 2.4)",
+        desc: "Section 2.4 specifies Continuous Particle Swarm Optimization. To apply continuous particle positions to the discrete TSP, we use Random Key Encoding (Smallest Position Value / Ranked-Order Value).",
+        calc: `// Fixed Origin & Depot: V0 (Index 0)
+// Free intermediate nodes: {V1, V2, V3, V4, V5, V6, V7} (Dimension D = 7)
+
+Particle Position Vector:
+x_i = [ 2.41,  1.08, -0.74, -0.32,  0.95,  0.55, -0.15 ]
+Dims:  (V1)    (V2)   (V3)   (V4)   (V5)   (V6)   (V7)
+
+Ascending Sort Mapping (Smallest Position Value):
+1. -0.74 → V3
+2. -0.32 → V4
+3. -0.15 → V7
+4. +0.55 → V6
+5. +0.95 → V5
+6. +1.08 → V2
+7. +2.41 → V1
+
+Decoded Candidate Tour:
+π_i = ⟨ V0 → V3 → V4 → V7 → V6 → V5 → V2 → V1 → V0 ⟩`,
+        noteTitle: "⚙️ Random Key Permutation Encoding",
+        note: "Continuous position variables allow the standard velocity update equations of Kennedy & Eberhart (1995) to operate smoothly without breaking valid TSP permutation constraints.",
+        zoom: [8.460, 124.660],
+        zoomLevel: 13,
+        legIndex: -1,
+        cumKm: 0.00
+      }},
+      {{
+        phase: "PHASE 4: NUMERICAL CALCULATION TRACE",
+        title: "Step 3: Numerical Velocity & Position Update Calculations",
+        desc: "At each iteration, every particle updates its velocity and position using inertia momentum, personal memory (pBest), and swarm guidance (gBest).",
+        calc: `// Velocity Update Equation (Section 2.4):
+v_{{id}}^{{t+1}} = w · v_{{id}}^t + c1·r1·(p_{{id}}^t - x_{{id}}^t) + c2·r2·(g_d^t - x_{{id}}^t)
+
+Parameters:
+Inertia w = 0.5,  Cognitive c1 = 0.8,  Social c2 = 0.8
+Random Samples: r1 = 0.60, r2 = 0.75
+
+Numerical Trace for Dimension d=1 (Vertex V1):
+Current Position:  x_{{i,1}}^t = 1.80
+Current Velocity:  v_{{i,1}}^t = 0.40
+Personal Best:     p_{{i,1}}^t = 2.10
+Global Best:       g_1^t    = 2.40
+
+Calculation:
+v_{{i,1}}^{{t+1}} = 0.5(0.40) + 0.8(0.60)(2.10 - 1.80) + 0.8(0.75)(2.40 - 1.80)
+         = 0.20 + 0.48(0.30) + 0.60(0.60)
+         = 0.20 + 0.144 + 0.360
+         = 0.704
+
+Position Update:
+x_{{i,1}}^{{t+1}} = x_{{i,1}}^t + v_{{i,1}}^{{t+1}} = 1.80 + 0.704 = 2.504`,
+        noteTitle: "🧮 Hand-Calculated Iteration Trace",
+        note: "Notice how the particle accelerates toward both its personal historical optimum and the swarm's global best position, achieving rapid convergence in 32.6 ms.",
+        zoom: [8.460, 124.660],
+        zoomLevel: 13,
+        legIndex: -1,
+        cumKm: 0.00
+      }},
+      {{
+        phase: "PHASE 5: OPTIMAL TOUR TRAVERSAL",
+        title: "Step 4: Leg 1 — V0 (Plaza Divisoria) → V3 (Museo de Oro)",
+        desc: "The tour departs from the central depot at Plaza Divisoria. Traveling east along RN Capistrano St and turning toward Corrales Ave to reach Xavier University.",
+        calc: `Leg 1: (V0, V3)
+From: Plaza Divisoria (Depot)
+To:   Museo de Oro (Xavier University)
+Edge Weight W(V0, V3): 0.36 km (356.5 meters)
+Driving Time: 57.4 seconds
+Cumulative Tour Distance: 0.36 km`,
+        noteTitle: "🚗 Downtown Heritage Departure",
+        note: "Plaza Divisoria has been CDO's historic center since 1901. Museo de Oro is Mindanao's pioneering folkloric and archaeological museum.",
+        zoom: [8.477, 124.644],
+        zoomLevel: 16,
+        legIndex: 1,
+        cumKm: 0.36
+      }},
+      {{
+        phase: "PHASE 5: OPTIMAL TOUR TRAVERSAL",
+        title: "Step 5: Leg 2 — V3 (Museo de Oro) → V4 (Vicente de Lara Park)",
+        desc: "From Xavier University, the vehicle drives north along Corrales Ave and Antonio Luna St to the Misamis Oriental Provincial Capitol grounds.",
+        calc: `Leg 2: (V3, V4)
+From: Museo de Oro
+To:   Vicente de Lara Park (Provincial Capitol)
+Edge Weight W(V3, V4): 1.30 km (1,301.4 meters)
+Driving Time: 166.6 seconds (2.8 mins)
+Cumulative Tour Distance: 0.36 + 1.30 = 1.66 km`,
+        noteTitle: "🌳 Shaded Capitol Park",
+        note: "Vicente de Lara Park is shaded by century-old mahogany trees and features the Press Freedom Monument and Provincial Capitol heritage building.",
+        zoom: [8.481, 124.646],
+        zoomLevel: 15,
+        legIndex: 2,
+        cumKm: 1.66
+      }},
+      {{
+        phase: "PHASE 5: OPTIMAL TOUR TRAVERSAL",
+        title: "Step 6: Leg 3 — V4 (Vicente de Lara Park) → V7 (Gardens of Malasag)",
+        desc: "The tour leaves the downtown core and travels eastward along the Butuan–Cagayan de Oro–Iligan Road (Sayre Highway), ascending the rolling slopes of Malasag Hill.",
+        calc: `Leg 3: (V4, V7)
+From: Vicente de Lara Park (Capitol)
+To:   Gardens of Malasag Eco-Tourism Village
+Edge Weight W(V4, V7): 8.71 km (8,711.2 meters)
+Driving Time: 862.0 seconds (14.4 mins)
+Cumulative Tour Distance: 1.66 + 8.71 = 10.37 km`,
+        noteTitle: "🌺 Eastern Eco-Tourism Ascent",
+        note: "Gardens of Malasag is a 7-hectare cultural sanctuary showcasing tribal architecture and lush endemic botanical gardens overlooking Macajalar Bay.",
+        zoom: [8.472, 124.673],
+        zoomLevel: 13,
+        legIndex: 3,
+        cumKm: 10.37
+      }},
+      {{
+        phase: "PHASE 5: OPTIMAL TOUR TRAVERSAL",
+        title: "Step 7: Leg 4 — V7 (Gardens of Malasag) → V6 (Amaya View)",
+        desc: "This is the longest leg in the tour. The route transitions from eastern Malasag Hill across south-central CDO along the Indahag mountain road to Amaya View leisure park.",
+        calc: `Leg 4: (V7, V6)
+From: Gardens of Malasag (Cugman Hill)
+To:   Amaya View (Indahag Highland Resort)
+Edge Weight W(V7, V6): 13.53 km (13,530.5 meters)
+Driving Time: 1,800.9 seconds (30.0 mins)
+Cumulative Tour Distance: 10.37 + 13.53 = 23.90 km`,
+        noteTitle: "⛰️ Highland Mountain Connection",
+        note: "Amaya View sits at 340 meters elevation in Sitio Sto. Niño, featuring panoramic observation decks, Noah's Ark, and mountain recreational parks.",
+        zoom: [8.441, 124.679],
+        zoomLevel: 12,
+        legIndex: 4,
+        cumKm: 23.90
+      }},
+      {{
+        phase: "PHASE 5: OPTIMAL TOUR TRAVERSAL",
+        title: "Step 8: Leg 5 — V6 (Amaya View) → V5 (High Ridge)",
+        desc: "From Indahag, the vehicle sweeps along the western ridgeline through Upper Macasandig to reach High Ridge restaurant.",
+        calc: `Leg 5: (V6, V5)
+From: Amaya View (Indahag)
+To:   High Ridge (Upper Macasandig)
+Edge Weight W(V6, V5): 7.37 km (7,365.6 meters)
+Driving Time: 1,057.5 seconds (17.6 mins)
+Cumulative Tour Distance: 23.90 + 7.37 = 31.27 km`,
+        noteTitle: "🌅 Scenic Ridge Sweep",
+        note: "High Ridge provides an iconic panoramic view looking down into the downtown cityscape and the winding Cagayan de Oro River.",
+        zoom: [8.443, 124.653],
+        zoomLevel: 13,
+        legIndex: 5,
+        cumKm: 31.27
+      }},
+      {{
+        phase: "PHASE 5: OPTIMAL TOUR TRAVERSAL",
+        title: "Step 9: Leg 6 — V5 (High Ridge) → V2 (St. Augustine Cathedral)",
+        desc: "The tour descends from Upper Macasandig via Tomas Saco St back into the historic downtown district to St. Augustine Metropolitan Cathedral.",
+        calc: `Leg 6: (V5, V2)
+From: High Ridge (Upper Macasandig)
+To:   St. Augustine Metropolitan Cathedral
+Edge Weight W(V5, V2): 4.69 km (4,687.6 meters)
+Driving Time: 733.8 seconds (12.2 mins)
+Cumulative Tour Distance: 31.27 + 4.69 = 35.95 km`,
+        noteTitle: "⛪ Heritage Descent",
+        note: "St. Augustine Cathedral is the seat of the Archdiocese of Cagayan de Oro, originally founded in 1622 by Augustinian Recollect missionaries.",
+        zoom: [8.469, 124.645],
+        zoomLevel: 14,
+        legIndex: 6,
+        cumKm: 35.95
+      }},
+      {{
+        phase: "PHASE 5: OPTIMAL TOUR TRAVERSAL",
+        title: "Step 10: Leg 7 — V2 (St. Augustine Cathedral) → V1 (Gaston Park)",
+        desc: "This is the shortest leg of the entire tour (158.5 meters). Moving immediately across Gaston Circle to the historical fountain park.",
+        calc: `Leg 7: (V2, V1)
+From: St. Augustine Metropolitan Cathedral
+To:   Gaston Park (Gaston Circle)
+Edge Weight W(V2, V1): 0.16 km (158.5 meters)
+Driving Time: 29.4 seconds
+Cumulative Tour Distance: 35.95 + 0.16 = 36.11 km`,
+        noteTitle: "⛲ Historic Fountain Square",
+        note: "Gaston Park is the oldest public plaza in CDO, famous for its lighted dancing musical fountains and historical Spanish-era landmarks.",
+        zoom: [8.4756, 124.6420],
+        zoomLevel: 17,
+        legIndex: 7,
+        cumKm: 36.11
+      }},
+      {{
+        phase: "PHASE 5: OPTIMAL TOUR TRAVERSAL",
+        title: "Step 11: Leg 8 — V1 (Gaston Park) → V0 (Plaza Divisoria Return)",
+        desc: "The tour closes its Hamiltonian cycle by returning southeast via Gaerlan St and RN Capistrano St back to the starting depot at Plaza Divisoria.",
+        calc: `Leg 8: (V1, V0)
+From: Gaston Park
+To:   Plaza Divisoria (START & RETURN DEPOT)
+Edge Weight W(V1, V0): 0.36 km (362.6 meters)
+Driving Time: 61.7 seconds
+Total Closed Tour Distance: 36.11 + 0.36 = 36.47 km`,
+        noteTitle: "🏁 Cycle Completion & Return to Depot",
+        note: "All 8 vertices have been visited exactly once, and the vehicle has safely returned to Plaza Divisoria, completing a valid Hamiltonian cycle.",
+        zoom: [8.4766, 124.6431],
+        zoomLevel: 16,
+        legIndex: 8,
+        cumKm: 36.47
+      }},
+      {{
+        phase: "PHASE 6: BENCHMARK & CONVERGENCE SUMMARY",
+        title: "Step 12: Complete Optimal Tour & Performance Benchmark",
+        desc: "Particle Swarm Optimization (Algorithm 2.4) discovered a tour of 36.47 km within 120 iterations in 32.6 milliseconds. It achieved a 1.45% proximity to the exact global optimum.",
+        calc: `Final Discovered Tour:
+⟨ V0 → V3 → V4 → V7 → V6 → V5 → V2 → V1 → V0 ⟩
+Total Distance: 36.47 km (36,469.7 meters)
+
+Performance Benchmark vs Other Algorithms:
+1. PSO Algorithm 2.4:      36.47 km (Gap: 1.45%)  [32.6 ms]
+2. Exact Brute Force:      35.95 km (Global Opt)  [9.8 ms]
+3. Nearest Neighbor (NN):  38.50 km (Gap: 7.08%)  [0.4 ms]
+
+PSO outperformed Nearest Neighbor by over 2.0 km!`,
+        noteTitle: "🏆 Final Benchmark Analysis",
+        note: "The PSO swarm balanced global exploration and local refinement to effectively navigate the 5,040 factorial permutations without getting trapped in greedy local minima.",
+        zoom: [8.455, 124.665],
+        zoomLevel: 13,
+        legIndex: -1,
+        cumKm: 36.47
+      }}
+    ];
+
+    let currentStep = 0;
+    let isPlaying = false;
+    let playInterval = null;
+
+    function applyStep(stepIdx) {{
+      if (stepIdx < 0) stepIdx = 0;
+      if (stepIdx >= STEPS.length) stepIdx = STEPS.length - 1;
+      currentStep = stepIdx;
+
+      const s = STEPS[stepIdx];
+
+      // Update Inspector UI
+      document.getElementById('card-phase').textContent = s.phase;
+      document.getElementById('card-title').textContent = s.title;
+      document.getElementById('card-desc').textContent = s.desc;
+      document.getElementById('card-calc').textContent = s.calc;
+      document.getElementById('card-note-title').textContent = s.noteTitle;
+      document.getElementById('card-note-content').innerHTML = s.note;
+
+      // Update Header & HUD
+      document.getElementById('hud-step-title').textContent = s.title.split(':')[0];
+      document.getElementById('step-badge').textContent = `STEP ${{stepIdx}} / ${{STEPS.length - 1}}`;
+      const pct = (stepIdx / (STEPS.length - 1)) * 100;
+      document.getElementById('step-progress-fill').style.width = `${{pct}}%`;
+      document.getElementById('hud-odometer').textContent = `${{s.cumKm.toFixed(2)}} km`;
+
+      // Update Metrics
+      if (s.legIndex > 0) {{
+        const leg = tourLegs[s.legIndex - 1];
+        document.getElementById('metric-leg').textContent = `${{leg.from_node}} → ${{leg.to_node}}`;
+        document.getElementById('metric-cost').textContent = `${{leg.distance_km.toFixed(2)}} km`;
+        document.getElementById('hud-leg-stat').textContent = `Traversing: ${{leg.from_name}} → ${{leg.to_name}}`;
+      }} else {{
+        document.getElementById('metric-leg').textContent = stepIdx === 12 ? "Tour Completed" : "Not Started";
+        document.getElementById('metric-cost').textContent = "—";
+        document.getElementById('hud-leg-stat').textContent = stepIdx === 12 ? "Tour Completed (36.47 km)" : "Ready to calculate";
+      }}
+      document.getElementById('metric-total').textContent = `${{s.cumKm.toFixed(2)}} km`;
+
+      // Update Matrix Table Highlights
+      renderMatrixTable(s.legIndex);
+
+      // Update Map Visuals
+      updateMapVisuals(stepIdx);
+    }}
+
+    function updateMapVisuals(stepIdx) {{
+      tourPathLayer.clearLayers();
+      if (carMarker) {{
+        map.removeLayer(carMarker);
+        carMarker = null;
+      }}
+
+      const s = STEPS[stepIdx];
+
+      // Step 0: Pins only (No tour lines)
+      if (stepIdx === 0) {{
+        map.flyTo(s.zoom, s.zoomLevel, {{ duration: 1.2 }});
+        return;
+      }}
+
+      // Step 1 to 3: Overview with optional digraph arcs
+      if (stepIdx >= 1 && stepIdx <= 3) {{
+        map.flyTo(s.zoom, s.zoomLevel, {{ duration: 1 }});
+        return;
+      }}
+
+      // Step 4 to 11: Individual Legs
+      if (stepIdx >= 4 && stepIdx <= 11) {{
+        const activeLegNum = s.legIndex; // 1 to 8
+
+        // Draw previously completed legs in muted teal
+        for (let i = 0; i < activeLegNum - 1; i++) {{
+          const prevLeg = tourLegs[i];
+          L.polyline(prevLeg.path, {{
+            color: '#14b8a6',
+            weight: 3.5,
+            opacity: 0.65
+          }}).addTo(tourPathLayer);
+        }}
+
+        // Draw current leg with bright pulsing neon color
+        const activeLeg = tourLegs[activeLegNum - 1];
+        const activePolyline = L.polyline(activeLeg.path, {{
+          color: '#22d3ee',
+          weight: 6,
+          opacity: 0.95
+        }}).addTo(tourPathLayer);
+
+        // Position car at start or animate along path
+        if (activeLeg.path.length > 0) {{
+          animateCarAlongPath(activeLeg.path);
+        }}
+
+        map.flyToBounds(activePolyline.getBounds(), {{
+          padding: [50, 50],
+          maxZoom: s.zoomLevel,
+          duration: 1.0
+        }});
+        return;
+      }}
+
+      // Step 12: Complete Tour Showcase
+      if (stepIdx === 12) {{
+        tourLegs.forEach(leg => {{
+          L.polyline(leg.path, {{
+            color: '#14b8a6',
+            weight: 4.5,
+            opacity: 0.85
+          }}).addTo(tourPathLayer);
+        }});
+        map.flyTo(s.zoom, s.zoomLevel, {{ duration: 1.2 }});
+      }}
+    }}
+
+    function animateCarAlongPath(pathCoords) {{
+      if (!pathCoords || pathCoords.length === 0) return;
+
+      const carIcon = L.divIcon({{
+        className: 'car-marker',
+        html: `<div class="car-marker-icon">🚗</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+      }});
+
+      carMarker = L.marker(pathCoords[0], {{ icon: carIcon }}).addTo(map);
+
+      let step = 0;
+      const totalSteps = pathCoords.length;
+      const stepDuration = Math.max(12, Math.min(45, 1800 / totalSteps));
+
+      function move() {{
+        if (!carMarker || currentStep < 4 || currentStep > 11) return;
+        step++;
+        if (step < totalSteps) {{
+          carMarker.setLatLng(pathCoords[step]);
+          setTimeout(move, stepDuration);
+        }}
+      }}
+      move();
+    }}
+
+    function nextStep() {{
+      if (currentStep < STEPS.length - 1) {{
+        applyStep(currentStep + 1);
+      }}
+    }}
+
+    function prevStep() {{
+      if (currentStep > 0) {{
+        applyStep(currentStep - 1);
+      }}
+    }}
+
+    function resetToStep(idx) {{
+      stopPlay();
+      applyStep(idx);
+    }}
+
+    function togglePlay() {{
+      if (isPlaying) {{
+        stopPlay();
+      }} else {{
+        startPlay();
+      }}
+    }}
+
+    function startPlay() {{
+      isPlaying = true;
+      const btn = document.getElementById('btn-play');
+      btn.textContent = "⏸ Pause";
+      btn.classList.remove('btn-success');
+      btn.classList.add('btn-rose');
+
+      playInterval = setInterval(() => {{
+        if (currentStep < STEPS.length - 1) {{
+          nextStep();
+        }} else {{
+          stopPlay();
+        }}
+      }}, 3400);
+    }}
+
+    function stopPlay() {{
+      isPlaying = false;
+      if (playInterval) {{
+        clearInterval(playInterval);
+        playInterval = null;
+      }}
+      const btn = document.getElementById('btn-play');
+      btn.textContent = "▶ Auto-Play";
+      btn.classList.remove('btn-rose');
+      btn.classList.add('btn-success');
+    }}
+
+    function switchTab(tabId) {{
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }}
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {{
+      if (e.key === 'ArrowRight' || e.key === ' ') {{
+        nextStep();
+      }} else if (e.key === 'ArrowLeft') {{
+        prevStep();
+      }}
+    }});
+
+    // Initialize application
+    renderMatrixTable();
+    renderVertexList();
+    applyStep(0);
+  </script>
+</body>
+</html>
+"""
+
+    out_file = ROOT / "presentation/pso_step_by_step_visualizer.html"
+    out_res = ROOT / "results/pso_step_by_step_visualizer.html"
+    out_file.write_text(html_content, encoding="utf-8")
+    out_res.write_text(html_content, encoding="utf-8")
+    print(f"Generated {out_file} successfully ({len(html_content)} bytes).")
+
+if __name__ == "__main__":
+    build_visualizer()
