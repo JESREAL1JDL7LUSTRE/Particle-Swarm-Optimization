@@ -3,7 +3,7 @@
   "objective": "Minimize the sum of stored OSRM recommended driving-route distances",
   "input_sha256": {
     "cdo_tsp_dataset.csv": "0dd9e7cae1ef0acee284aaba8094bf437d7f64a9878a0c37d9fa210ed9600a76",
-    "cdo_tsp_locations.csv": "647c01c579f6967eb011c271bfcc8be305d1e75177ffcfb9736d87ab96aa5f7a"
+    "cdo_tsp_locations.csv": "5d45c58c6a8ad2d766d3b6f4546a4ec20516df455605dca2efeeb5eb7f8ed1ac"
   },
   "python_version": "3.13.13",
   "parameters": {
@@ -53,8 +53,8 @@
   "matches_exact": false,
   "first_optimum_iteration": null,
   "initial_best_m": 37290.7,
-  "pso_seconds": 0.033729623071849346,
-  "brute_force_seconds": 0.009743160917423666,
+  "pso_seconds": 0.03261915605980903,
+  "brute_force_seconds": 0.00978793203830719,
   "repeated_runs": {
     "count": 30,
     "seed_range": [

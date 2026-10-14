@@ -26,7 +26,7 @@ For notebook execution, install `requirements-notebook.txt`, then run `python3 s
 ## Data and interpretation
 
 - `cdo_tsp_dataset.csv`: 64 ordered distance/duration entries, one header. **This file is loaded by the solver.** Distance is in metres; duration is retained for reference only.
-- `cdo_tsp_locations.csv`: eight locations, OSM source URLs, coordinates and access assumptions.
+- `cdo_tsp_locations.csv`: eight locations, Google Maps links, OSM source URLs, coordinates and access assumptions.
 - `data/attractions.json`: selected source objects and designated routing-request points.
 - `data/raw/`: saved public OSM/OSRM responses and their acquisition manifest.
 - `data/routes.geojson`: all 56 directed road geometries.
@@ -38,7 +38,7 @@ Distances retain provider precision, not survey accuracy. All raw routes are che
 
 ## Implementation and outputs
 
-Implemented comparisons: **discrete swap PSO, brute force, nearest neighbor**. The PSO adaptation uses valid probabilities, sequential alignment, retained velocity and explicit exploratory swaps. No genetic algorithm is claimed.
+The focus of this project is the **discrete swap PSO** assigned algorithm. Exact brute force is included as an optimality verification anchor, and nearest neighbor as an optional baseline. The PSO adaptation uses valid probabilities, sequential alignment, retained velocity and explicit exploratory swaps.
 
 `results/summary.json`, `convergence.csv`, `repeated_runs.csv`, and `tour_legs.csv` contain measured outputs. Three PNGs show the directed cost matrix, convergence, and road-route geometry. Read [the report](CDO_TSP_PSO_Report.md) and [presentation script](CDO_TSP_Presentation_Script.md) for the problem, methods, results and caveats.
 

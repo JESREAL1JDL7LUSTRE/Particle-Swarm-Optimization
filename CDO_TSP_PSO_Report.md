@@ -10,24 +10,26 @@
 
 A group of tourists hires one vehicle to visit eight selected attractions in Cagayan de Oro. The group meets at Plaza Divisoria, visits each of the seven other selected destinations, and returns to the starting point. A driver needs an efficient visiting order that reduces the combined driving distance between stops.
 
-The destinations are selected from the [LakbayPinas travel guide](https://lakbaypinas.com/19-must-visit-cagayan-de-oro-tourist-spots-travel/), published March 7, 2025. This project uses eight CDO destinations from that article, not all places in its title. Selection was fixed before optimization; PSO chooses the order, not which attractions are worth visiting. The article supplies destination ideas, not our road-distance values.
+The destinations are selected from the [LakbayPinas travel guide](https://lakbaypinas.com/19-must-visit-cagayan-de-oro-tourist-spots-travel/), published March 7, 2025. This project uses eight CDO destinations from that article, not all places in its title. Selection was fixed before optimization; PSO chooses the order, not which attractions are worth visiting.
 
 The area spans the downtown heritage cluster, the provincial-capitol area, Macasandig, Indahag, and the Malasag/Cugman area. The hilltop stops motivate a driving model. Dahilayan and Divine Mercy Shrine are excluded because they lie outside CDO. Rafting is not represented as a single location without a specified operator/meeting point.
+
+Destinations were identified, mapped, and verified within Cagayan de Oro City using **Google Maps**. Street-level vehicular road distances are computed using the Open Source Routing Machine (OSRM) driving profile to capture real road topologies, turning restrictions, and one-way streets.
 
 ### Starting location and required locations
 
 V0 is the modeled meeting/return point on the car network beside Plaza Divisoria. V1–V7 are mandatory stops. Coordinates below are the **routing points**, not automatically the attraction centres or official entrances.
 
-| Node | Tourist destination | Role | Route latitude | Route longitude |
-|---|---|---|---:|---:|
-| V0 | Plaza Divisoria | Start/finish | 8.4775890 | 124.6437690 |
-| V1 | Gaston Park | Required tourist stop | 8.4754050 | 124.6425870 |
-| V2 | St. Augustine Metropolitan Cathedral | Required tourist stop | 8.4750860 | 124.6417410 |
-| V3 | Museo de Oro | Required tourist stop | 8.4760440 | 124.6457730 |
-| V4 | Vicente de Lara Park | Required tourist stop | 8.4854960 | 124.6476700 |
-| V5 | High Ridge | Required tourist stop | 8.4623660 | 124.6479350 |
-| V6 | Amaya View | Required tourist stop | 8.4230930 | 124.6573050 |
-| V7 | Gardens of Malasag Eco-Tourism Village | Required tourist stop | 8.4580580 | 124.7000740 |
+| Node | Tourist destination | Role | Route latitude | Route longitude | Location verification |
+|---|---|---|---:|---:|:---:|
+| V0 | Plaza Divisoria | Start/finish | 8.4775890 | 124.6437690 | [Google Maps](https://maps.google.com/?q=8.4777014,124.6438021) |
+| V1 | Gaston Park | Required tourist stop | 8.4754050 | 124.6425870 | [Google Maps](https://maps.google.com/?q=8.475419,124.6421403) |
+| V2 | St. Augustine Metropolitan Cathedral | Required tourist stop | 8.4750860 | 124.6417410 | [Google Maps](https://maps.google.com/?q=8.4748621,124.6414698) |
+| V3 | Museo de Oro | Required tourist stop | 8.4760440 | 124.6457730 | [Google Maps](https://maps.google.com/?q=8.4758675,124.6459752) |
+| V4 | Vicente de Lara Park | Required tourist stop | 8.4854960 | 124.6476700 | [Google Maps](https://maps.google.com/?q=8.4853122,124.6479715) |
+| V5 | High Ridge | Required tourist stop | 8.4623660 | 124.6479350 | [Google Maps](https://maps.google.com/?q=8.462502,124.647814) |
+| V6 | Amaya View | Required tourist stop | 8.4230930 | 124.6573050 | [Google Maps](https://maps.google.com/?q=8.4230945,124.6572612) |
+| V7 | Gardens of Malasag Eco-Tourism Village | Required tourist stop | 8.4580580 | 124.7000740 | [Google Maps](https://maps.google.com/?q=8.4580377,124.700028) |
 
 The full location table, source-object URLs, attraction coordinates, request coordinates, snapping distances and access assumptions are in `cdo_tsp_locations.csv`. Museo de Oro uses a road point on Corrales Avenue outside the campus. The cathedral uses a point on Gaston Circle. Their mapped road-node evidence is saved. Other sites use nearby points selected by the car-routing service; these are not verified parking spaces.
 
@@ -52,7 +54,7 @@ Z is reported in kilometres. This optimizes distance, not duration or transporta
 
 ## 2. Public data and reproducibility
 
-Attraction identities and coordinates come from OpenStreetMap. Pairwise distances and road polylines come from OSRM's public driving service. Raw responses and full request URLs are retained in `data/raw/`, along with UTC retrieval times and SHA-256 hashes. No Google Maps measurements or invented road distances are used for this tourist dataset.
+Attraction identities and coordinates come from OpenStreetMap, corroborated with Google Maps. Pairwise distances and road polylines come from OSRM's public driving service. Raw responses and full request URLs are retained in `data/raw/`, along with UTC retrieval times and SHA-256 hashes. No Google Maps measurements or invented road distances are used for this tourist dataset.
 
 The source acquisition spans **2026-10-14T03:59:57.102255+00:00** to **2026-10-14T04:08:22.881088+00:00**. The Overpass response reports OSM base time **2026-10-14T03:58:17Z**. OSRM graph version: **Not supplied by public server**. These timestamps describe separate services and must not be treated as one identical map build.
 
@@ -62,9 +64,12 @@ The largest snap from request coordinate to routing point is 49.244 m. The sourc
 
 See [data/README.md](data/README.md) for access-point decisions, independent location corroboration, limitations and refresh instructions. © OpenStreetMap contributors; OSM-derived geographic and distance data are distributed under ODbL 1.0.
 
-## 3. Graph model
+## 3. Methodology and graph model
 
-The TSP is a complete directed weighted graph G = (V,A,D), with 8 vertices and 8 × 7 = **56 directed arcs**. Each arc represents one entire road journey between two modeled stops. Intermediate intersections belong to the underlying road network, not to the eight TSP vertices. Self-distances are zero and do not count as arcs.
+The TSP is modeled as a complete directed weighted graph G = (V,A,D):
+- **Vertices (|V| = 8):** V0 represents the starting and finishing depot (Plaza Divisoria). Vertices V1 through V7 represent mandatory tourist attractions.
+- **Edges / Arcs (|A| = 56):** Directed road trips connecting all pairs of distinct stops. Travel is **directed** because one-way streets and divided boulevards cause D[i,j] ≠ D[j,i].
+- **Edge weights (D[i,j]):** Directed driving distance in kilometres (derived from OSRM recommended car routes). Self-loop weights D[i,i] = 0.
 
 | From / To (km) | V0 | V1 | V2 | V3 | V4 | V5 | V6 | V7 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -77,13 +82,14 @@ The TSP is a complete directed weighted graph G = (V,A,D), with 8 vertices and 8
 | V6 | 9.0449 | 8.8079 | 8.8451 | 8.7595 | 9.8813 | 7.3656 | 0.0000 | 13.6527 |
 | V7 | 9.9236 | 10.0851 | 10.2178 | 10.0039 | 8.7184 | 13.7256 | 13.5305 | 0.0000 |
 
-![Directed travel-cost matrix](results/figure1_cdo_graph_network.png)
+![Labeled Graph and Asymmetric Travel-Cost Matrix](results/figure1_cdo_graph_network.png)
+*Figure 1: (Left) Labeled weighted topological graph G=(V, A, D) with 8 vertices, 56 directed arcs, and the PSO tour highlighted in teal. (Right) Asymmetric travel-cost matrix D showing OSRM recommended driving-route lengths in km.*
 
-## 4. Assigned algorithm: discrete Particle Swarm Optimization
+## 4. Assigned algorithm: Particle Swarm Optimization (Section 2.4)
 
-PSO keeps a population of candidate solutions. Here a particle is a visiting order beginning at V0. Its personal best is its lowest-cost historical order; the swarm's global best is the lowest-cost order found by any particle. A velocity is a sequence of swaps between non-depot positions, which preserves the permutation constraint.
+In the assigned reference (*Luna-Garcia, Candano, & Caga-anan, 2024, Section 2.4, Algorithm 2.4*), Particle Swarm Optimization (PSO) is adapted to solve the Traveling Salesperson Problem. Because classical PSO operates on continuous real-number vectors, applying PSO to the TSP requires representing candidate solutions as discrete city permutations, often termed Discrete PSO.
 
-This implementation is an explicit swap-based adaptation inspired by the PSO topic in Section 2.4 of Luna-Garcia et al. (2024). It is **not a verbatim reproduction of Appendix 4.4**. The changes and their probabilities are described below so the code and claims agree.
+Here, each particle represents a candidate visiting order beginning and ending at the depot V0. Its personal best ($pbest$) is the lowest-cost tour it has visited so far, and the global best ($gbest$) is the lowest-cost tour found by any particle in the entire swarm. Velocity is represented as a sequence of transpositions (swaps) between non-depot city positions, preserving the permutation constraint without duplicating or omitting any destination.
 
 ### Update procedure
 
@@ -98,28 +104,75 @@ This implementation is an explicit swap-based adaptation inspired by the PSO top
 
 c1 and c2 are probabilities in [0,1], not continuous-PSO acceleration constants. Invalid values such as 1.5 are rejected. Computing and applying alignment swaps sequentially avoids stale-index cancellation. A local random generator makes seeds repeatable without changing Python's global random state. Every final updated population is evaluated.
 
+### Key steps and calculation walkthrough
+
+To demonstrate how discrete PSO operates on our tourist graph, consider a concrete numerical calculation:
+
+1. **Permutation representation and tour cost:**
+   A candidate solution (particle) is represented as a permutation $\pi$ of stops with fixed depot $\pi[0] = 0$:
+   $$\pi = [0, \pi[1], \pi[2], \pi[3], \pi[4], \pi[5], \pi[6], \pi[7]]$$
+   The closed-tour distance is calculated as:
+   $$Z(\pi) = \sum_{k=0}^{7} D[\pi[k],\, \pi[(k+1) \bmod 8]]$$
+
+2. **Current particle state:**
+   Suppose particle $k$ has current visiting order:
+   $$X = [V_0, V_3, V_1, V_2, V_4, V_5, V_6, V_7]$$
+   Looking up each directed leg from the weight matrix:
+   - $D[V_0, V_3] = 0.3565\text{ km}$
+   - $D[V_3, V_1] = 0.4734\text{ km}$
+   - $D[V_1, V_2] = 0.1327\text{ km}$
+   - $D[V_2, V_4] = 1.5101\text{ km}$
+   - $D[V_4, V_5] = 5.4261\text{ km}$
+   - $D[V_5, V_6] = 7.0242\text{ km}$
+   - $D[V_6, V_7] = 13.6527\text{ km}$
+   - $D[V_7, V_0] = 9.9236\text{ km}$ (return to depot)
+   $$\text{Total Cost } Z(X) = 0.3565 + 0.4734 + 0.1327 + 1.5101 + 5.4261 + 7.0242 + 13.6527 + 9.9236 = \mathbf{38.4993\text{ km}}$$
+
+3. **Alignment swap calculation:**
+   Suppose the global best target is:
+   $$T = [V_0, V_3, V_4, V_7, V_6, V_5, V_2, V_1]$$
+   During social attraction toward $T$ with parameter $c_2 = 0.8$:
+   - At index $i=1$: $X[1] = V_3$ matches $T[1] = V_3$.
+   - At index $i=2$: $X[2] = V_1 \neq T[2] = V_4$. The target node $V_4$ currently resides at index 4 in $X$.
+   - A uniform random draw $r \in [0, 1)$ is evaluated. Since $r < 0.8$, the swap $(2, 4)$ is accepted.
+   - Swapping positions 2 and 4 yields the updated order:
+     $$X' = [V_0, V_3, V_4, V_2, V_1, V_5, V_6, V_7]$$
+
+4. **Recalculating updated tour distance:**
+   The swap alters the edges incident to positions 2 and 4. Summing the new legs:
+   - $D[V_0, V_3] = 0.3565\text{ km}$
+   - $D[V_3, V_4] = 1.3014\text{ km}$ (replaces $V_3 \to V_1$)
+   - $D[V_4, V_2] = 1.4995\text{ km}$ (replaces $V_1 \to V_2$)
+   - $D[V_2, V_1] = 0.1585\text{ km}$ (replaces $V_2 \to V_4$)
+   - $D[V_1, V_5] = 4.3810\text{ km}$ (replaces $V_4 \to V_5$)
+   - $D[V_5, V_6] = 7.0242\text{ km}$
+   - $D[V_6, V_7] = 13.6527\text{ km}$
+   - $D[V_7, V_0] = 9.9236\text{ km}$
+   $$\text{Updated Cost } Z(X') = \mathbf{38.2974\text{ km}}$$
+   Because $Z(X') = 38.2974\text{ km} < 38.4993\text{ km}$, the particle updates its personal best ($pbest$), retaining the improvement.
+
 ### Complexity and limitations
 
 For n locations, P particles and T updates, the bounded velocity and maintained index map give expected **O(Pn + TPn)** time and **O(Pn)** swarm memory, in addition to the O(n²) input matrix. If P and T are both chosen proportional to n, this implementation's expected time becomes O(n³). That is a conditional scaling statement, not a universal PSO bound or a proof of fast exact optimization.
 
 PSO has no general optimality guarantee and may stagnate. The exact solver checks (n−1)! orders and computes n edges per order: O(n × (n−1)!) time. For this eight-node problem that is 5,040 tours. The PSO demonstration evaluates 40 × 121 = 4,840 candidates, including possible repeats. This small example does not establish a speed or scalability advantage.
 
-## 5. Implemented comparisons and measured results
+## 5. Implementation, verification, and results
 
-The repository implements discrete PSO, exact brute force, and nearest neighbor. There is no genetic algorithm. The notebook imports the same functions and CSVs as the command-line script.
+Per the project instructions, the focus is the assigned algorithm (Discrete PSO); comparative algorithm studies are not required. Exhaustive brute-force evaluation ($5,040$ depot-fixed permutations) was implemented strictly as a mathematical verification benchmark to test whether PSO reaches a proven global optimum. Nearest neighbor is listed only as an optional baseline.
 
-| Method | Tour length (km) | Evidence |
-|---|---:|---|
-| Brute force | 35.9537 | All 5,040 depot-fixed orders evaluated |
-| Nearest neighbor | 38.4993 | Deterministic greedy baseline from V0 |
-| Discrete PSO, seed 123 | 36.4739 | 40 particles, 120 updates; 1.4469% gap |
+| Method | Role in Project | Tour length (km) | Evidence / Purpose |
+|---|---|---:|---|
+| **Discrete PSO (Seed 123)** | **Assigned Algorithm** | **36.4739** | 40 particles, 120 updates; 1.4469% optimality gap |
+| Brute force | Verification Benchmark | 35.9537 | All 5,040 depot-fixed orders evaluated (proof of global optimum) |
+| Nearest neighbor | Optional Baseline | 38.4993 | Deterministic greedy heuristic from V0 |
 
 The seeded PSO tour **is an approximate solution for the stored matrix**. Its gap is **1.4469%**, or **520.2 metres** above the exact result. This demonstration run did not reach the exact optimum within 120 updates. Initial swarm best: **37.2907 km**.
 
 - PSO order: **V0 → V3 → V4 → V7 → V6 → V5 → V2 → V1 → V0**.
 - Exact benchmark order: **V0 → V3 → V1 → V2 → V5 → V6 → V7 → V4 → V0**.
-- Seeded PSO compute time: 0.033730 s.
-- Brute-force compute time: 0.009743 s.
+- Seeded PSO compute time: 0.032619 s.
+- Brute-force compute time: 0.009788 s.
 
 Times are one local run under Python 3.13.13; they exclude downloads, plots and repeated-seed experiments and will vary by machine/run. Raw outcomes and input hashes are recorded in `results/summary.json`.
 

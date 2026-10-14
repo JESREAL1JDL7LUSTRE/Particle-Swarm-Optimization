@@ -7,7 +7,8 @@
     "request_lat": 8.4777014,
     "request_lon": 124.6438021,
     "article_section": "4.3",
-    "access_note": "Meeting point on R. N. Abejuela Street; plaza walking excluded."
+    "access_note": "Meeting point on R. N. Abejuela Street; plaza walking excluded.",
+    "google_maps_url": "https://maps.google.com/?q=8.4777014,124.6438021"
   },
   {
     "code": "V1",
@@ -17,7 +18,8 @@
     "request_lat": 8.475419,
     "request_lon": 124.6421403,
     "article_section": "4.2",
-    "access_note": "Nearby car-network point; walking into the park excluded."
+    "access_note": "Nearby car-network point; walking into the park excluded.",
+    "google_maps_url": "https://maps.google.com/?q=8.475419,124.6421403"
   },
   {
     "code": "V2",
@@ -28,7 +30,8 @@
     "request_lon": 124.6417411,
     "article_section": "4.4",
     "access_note": "Designated road node 1911435359 on Gaston Circle; worship-site access not assumed.",
-    "access_osm_node": 1911435359
+    "access_osm_node": 1911435359,
+    "google_maps_url": "https://maps.google.com/?q=8.4748621,124.6414698"
   },
   {
     "code": "V3",
@@ -39,7 +42,8 @@
     "request_lon": 124.6457732,
     "article_section": "4.1",
     "access_note": "Designated road node 7655144218 on Corrales Avenue outside the campus; museum/campus permission and walking excluded.",
-    "access_osm_node": 7655144218
+    "access_osm_node": 7655144218,
+    "google_maps_url": "https://maps.google.com/?q=8.4758675,124.6459752"
   },
   {
     "code": "V4",
@@ -49,7 +53,8 @@
     "request_lat": 8.4853122,
     "request_lon": 124.6479715,
     "article_section": "5.3",
-    "access_note": "Nearby car-network point on Don Apolinar Velez Street; park walking excluded."
+    "access_note": "Nearby car-network point on Don Apolinar Velez Street; park walking excluded.",
+    "google_maps_url": "https://maps.google.com/?q=8.4853122,124.6479715"
   },
   {
     "code": "V5",
@@ -59,7 +64,8 @@
     "request_lat": 8.462502,
     "request_lon": 124.647814,
     "article_section": "5.1",
-    "access_note": "OSRM road point near mapped restaurant; visitor access and parking assumed."
+    "access_note": "OSRM road point near mapped restaurant; visitor access and parking assumed.",
+    "google_maps_url": "https://maps.google.com/?q=8.462502,124.647814"
   },
   {
     "code": "V6",
@@ -69,7 +75,8 @@
     "request_lat": 8.4230945,
     "request_lon": 124.6572612,
     "article_section": "5.2",
-    "access_note": "OSRM road point near mapped attraction centre; visitor access and parking assumed."
+    "access_note": "OSRM road point near mapped attraction centre; visitor access and parking assumed.",
+    "google_maps_url": "https://maps.google.com/?q=8.4230945,124.6572612"
   },
   {
     "code": "V7",
@@ -79,6 +86,7 @@
     "request_lat": 8.4580377,
     "request_lon": 124.700028,
     "article_section": "3.3",
-    "access_note": "OSRM road point near mapped recreation grounds; visitor access and parking assumed."
+    "access_note": "OSRM road point near mapped recreation grounds; visitor access and parking assumed.",
+    "google_maps_url": "https://maps.google.com/?q=8.4580377,124.700028"
   }
 ]

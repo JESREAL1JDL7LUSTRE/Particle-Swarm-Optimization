@@ -69,6 +69,7 @@ def build(output=ROOT, raw=ROOT / "data/raw"):
             "Snap_Distance_m": round(source["distance"], 3),
             "POI_to_Route_m": round(separation_m([coord["lon"], coord["lat"]], source["location"]), 3),
             "Road_Name": source["name"] or "Unnamed mapped access road",
+            "Google_Maps_URL": p.get("google_maps_url", f"https://maps.google.com/?q={coord['lat']},{coord['lon']}"),
             "OSM_URL": f"https://www.openstreetmap.org/{p['osm_type']}/{p['osm_id']}",
             "Article_Section": p["article_section"], "Attraction_Source": ARTICLE,
             "Access_Note": p["access_note"],

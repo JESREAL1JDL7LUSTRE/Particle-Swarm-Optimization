@@ -28,18 +28,75 @@ def generate_visualizations(locations, matrix, summary, history, directory, outp
     codes = [p["Node_ID"] for p in locations]
     n = len(codes)
     km = [[v / 10000 for v in row] for row in matrix]
-    fig, ax = plt.subplots(figsize=(11, 8), layout="constrained")
-    heat = ax.imshow(km, cmap="Blues", vmin=0, vmax=max(map(max, km)))
+
+    # Figure 1: Labeled Topological Graph (left) and Asymmetric Weight Matrix Heatmap (right)
+    fig, (ax_graph, ax_mat) = plt.subplots(1, 2, figsize=(18.5, 9), gridspec_kw={'width_ratios': [1.15, 1]}, layout="constrained")
+    angles = [math.pi / 2 - 2 * math.pi * i / n for i in range(n)]
+    radius = 1.0
+    coords = {i: (radius * math.cos(angles[i]), radius * math.sin(angles[i])) for i in range(n)}
+
+    # Faint background directed arcs
     for i in range(n):
         for j in range(n):
-            ax.text(j, i, f"{km[i][j]:.2f}", ha="center", va="center",
-                    color="white" if km[i][j] > max(map(max, km)) * 0.6 else "#15304a")
-    ax.set_xticks(range(n), codes)
-    ax.set_yticks(range(n), [f"{p['Node_ID']}  {p['Location_Name']}" for p in locations], fontsize=9)
-    ax.set_xlabel("Destination")
-    ax.set_ylabel("Origin")
-    ax.set_title("CDO tourist travel-cost graph\nDirected driving distances (km); 8 vertices, 56 arcs", pad=18)
-    fig.colorbar(heat, ax=ax, label="Route length (km)", shrink=0.8)
+            if i != j and (i, j) not in legs:
+                x1, y1 = coords[i]
+                x2, y2 = coords[j]
+                ax_graph.annotate("", xy=(x2, y2), xytext=(x1, y1),
+                                  arrowprops=dict(arrowstyle="->", color="#c5d3df", lw=0.7, alpha=0.35,
+                                                  shrinkA=18, shrinkB=18, connectionstyle="arc3,rad=0.08"))
+
+    # Highlighted PSO tour legs with arc weights
+    for k, (u, v) in enumerate(legs):
+        x1, y1 = coords[u]
+        x2, y2 = coords[v]
+        ax_graph.annotate("", xy=(x2, y2), xytext=(x1, y1),
+                          arrowprops=dict(arrowstyle="-|>", color="#026d75", lw=2.5,
+                                          shrinkA=18, shrinkB=18, connectionstyle="arc3,rad=0.12"))
+        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+        dx, dy = x2 - x1, y2 - y1
+        dist = math.hypot(dx, dy)
+        lx, ly = (mx - 0.08 * (dy / dist), my + 0.08 * (dx / dist)) if dist > 0 else (mx, my)
+        leg_km = matrix[u][v] / 10000
+        ax_graph.text(lx, ly, f"{leg_km:.2f} km", fontsize=8.5, weight="bold", color="#014f55",
+                      bbox=dict(boxstyle="round,pad=0.2", facecolor="#eef7f7", edgecolor="#026d75", alpha=0.9),
+                      ha="center", va="center", zorder=7)
+
+    # Vertices
+    for i in range(n):
+        x, y = coords[i]
+        is_depot = (i == 0)
+        color = "#b33b53" if is_depot else "#17344b"
+        ax_graph.scatter(x, y, s=500 if is_depot else 400, color=color, edgecolors="white", linewidths=2.5, zorder=5)
+        ax_graph.text(x, y, f"V{i}", color="white", weight="bold", fontsize=10, ha="center", va="center", zorder=6)
+        label_dist = 1.30
+        lx = label_dist * math.cos(angles[i])
+        ly = label_dist * math.sin(angles[i])
+        name = locations[i]["Location_Name"]
+        if is_depot:
+            name += " (Start/Depot)"
+        ha = "left" if lx > 0.25 else ("right" if lx < -0.25 else "center")
+        ax_graph.text(lx, ly, name, weight="bold" if is_depot else "normal", fontsize=9.5,
+                      color="#b33b53" if is_depot else "#17344b", ha=ha, va="center")
+
+    ax_graph.set_xlim(-1.95, 1.85)
+    ax_graph.set_ylim(-1.55, 1.55)
+    ax_graph.axis("off")
+    ax_graph.set_title("Labeled Weighted Graph $G = (V, A, D)$\n8 vertices, 56 directed arcs; PSO tour highlighted in teal",
+                       fontsize=12, pad=15, weight="bold")
+
+    # Asymmetric Weight Matrix Heatmap
+    heat = ax_mat.imshow(km, cmap="Blues", vmin=0, vmax=max(map(max, km)))
+    for i in range(n):
+        for j in range(n):
+            ax_mat.text(j, i, f"{km[i][j]:.2f}", ha="center", va="center",
+                        color="white" if km[i][j] > max(map(max, km)) * 0.6 else "#15304a", fontsize=8.5)
+    ax_mat.set_xticks(range(n), codes)
+    ax_mat.set_yticks(range(n), [f"{p['Node_ID']}  {p['Location_Name']}" for p in locations], fontsize=8.5)
+    ax_mat.set_xlabel("Destination", fontsize=10)
+    ax_mat.set_ylabel("Origin", fontsize=10)
+    ax_mat.set_title("Asymmetric Travel-Cost Matrix $D$\nDirected OSRM car-route lengths in km", fontsize=12, pad=15, weight="bold")
+    fig.colorbar(heat, ax=ax_mat, label="Route distance (km)", shrink=0.75)
+    fig.suptitle("Cagayan de Oro Tourist Driving Tour: Graph Model & Asymmetric Weight Matrix", fontsize=15, weight="bold")
     fig.supxlabel("Cells are lengths of OSRM recommended car routes. Opposite directions may differ.\n" + ATTRIBUTION, fontsize=9)
     fig.savefig(output / "figure1_cdo_graph_network.png", dpi=180)
     plt.close(fig)
@@ -113,3 +170,10 @@ def generate_visualizations(locations, matrix, summary, history, directory, outp
     fig.supxlabel("Routes join modeled car-network points. On-site walking and parking are excluded.\n" + ATTRIBUTION, fontsize=10)
     fig.savefig(output / "figure3_cdo_tour.png", dpi=180)
     plt.close(fig)
+
+    try:
+        from scripts.generate_interactive_map import generate_interactive_map
+        generate_interactive_map(directory, output)
+    except Exception:
+        pass
+

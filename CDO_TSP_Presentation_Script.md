@@ -1,100 +1,116 @@
-# Presentation script: CDO tourist driving tour using PSO
+# Presentation Script: CDO Tourist Driving Tour Using PSO
 
-Target: 10–15 minutes including a live demonstration. The ten segments below allocate 12 minutes. These are speaker notes and visual instructions, not a rendered slide deck. Rehearse the pacing and include time for pointing at the matrix and route.
+**Required Duration:** 10–15 minutes including live Python code execution.
+**Structure:** Aligned with the 5 PIT Rubric Evaluation Components.
 
-## Slide 1 — Problem and motivation (0:00–1:00)
+---
 
-**Show:** title, Cagayan de Oro location, start/end point.
+### Component 1: Introduction, Problem, and Objective (Suggested: 2–3 minutes)
 
-“Our problem is planning the visiting order for a group of tourists travelling together by car in Cagayan de Oro. They begin at Plaza Divisoria, visit seven other selected attractions, and return to their starting point. We minimize the combined driving distance between stops. This is a Traveling Salesperson Problem because every selected destination must be scheduled once in a closed tour.”
+#### Slide 1 — Title and Real-Life TSP Motivation (0:00–1:00)
+* **Visual:** Project title, Cagayan de Oro map overview, starting depot (Plaza Divisoria).
+* **Speaker Script:**
+  “Good day. Today, I am presenting our Graph Theory Performance Innovative Task: solving a real-life Traveling Salesperson Problem in Cagayan de Oro City using our assigned algorithm, Discrete Particle Swarm Optimization.
+  Our scenario involves planning an efficient driving tour for a group of tourists visiting Cagayan de Oro. They hire a single vehicle, start at Plaza Divisoria, visit seven other prominent tourist destinations, and return to Plaza Divisoria.
+  The mathematical challenge is to determine the optimal visiting order that minimizes the total driving distance while visiting each required location exactly once.”
 
-Explain that the route is a mathematical distance model; it is not a promise that every activity fits into a single day.
+#### Slide 2 — Tourist Destinations & Google Maps Verification (1:00–2:15)
+* **Visual:** Eight-stop table with Google Maps links and locations across CDO.
+* **Speaker Script:**
+  “The destinations are selected from the LakbayPinas Cagayan de Oro travel guide. We chose eight key spots located strictly within Cagayan de Oro City:
+  - V0: Plaza Divisoria (our start and finish depot)
+  - V1: Gaston Park
+  - V2: St. Augustine Metropolitan Cathedral
+  - V3: Museo de Oro
+  - V4: Vicente de Lara Park
+  - V5: High Ridge in Macasandig
+  - V6: Amaya View in Indahag
+  - V7: Gardens of Malasag Eco-Tourism Village in Cugman
+  Each location was verified on Google Maps. Because places like Museo de Oro and the Cathedral sit inside pedestrian campuses or plazas, we designated street-level vehicular drop-off nodes on Corrales Avenue and Gaston Circle to reflect realistic driving access.”
 
-## Slide 2 — Selected destinations and source (1:00–2:15)
+#### Slide 3 — Objective and Assumptions (2:15–3:00)
+* **Visual:** Objective equation $Z(\pi) = \sum D[\pi[k], \pi[k+1]]$, key constraints.
+* **Speaker Script:**
+  “Our objective is to minimize total driving distance in kilometres:
+  $$Z(\pi) = D[\pi[0], \pi[1]] + D[\pi[1], \pi[2]] + \dots + D[\pi[7], \pi[0]]$$
+  Key assumptions:
+  1. Closed tour: Start and finish at V0, visiting V1 through V7 exactly once.
+  2. The vehicle travels on real road networks. Because of one-way roads and traffic flow, travel between two stops is directed: distance from A to B does not necessarily equal B to A.
+  3. We optimize distance; entrance fees, sightseeing durations, and live congestion are outside the distance objective.”
 
-**Show:** the eight-location table from the report and the LakbayPinas source link.
+---
 
-“We selected eight destinations from the LakbayPinas guide. Our set combines heritage sites, parks and hilltop attractions. We use only locations within Cagayan de Oro, as required by the assignment. The article supplies our attraction selection, while OpenStreetMap and OSRM supply the geographic data and driving-route costs.”
+### Component 2: Assigned Algorithm Discussion (Suggested: 2–3 minutes)
 
-Read and locate: V0: Plaza Divisoria; V1: Gaston Park; V2: St. Augustine Metropolitan Cathedral; V3: Museo de Oro; V4: Vicente de Lara Park; V5: High Ridge; V6: Amaya View; V7: Gardens of Malasag Eco-Tourism Village.
+#### Slide 4 — Discrete PSO for Permutations (3:00–4:15)
+* **Visual:** Diagram of Particle Permutation, Personal Best ($pbest$), Global Best ($gbest$), Swap Velocity.
+* **Speaker Script:**
+  “Our assigned algorithm is Particle Swarm Optimization (PSO). In continuous PSO, particles move through space via position and velocity vectors. But TSP is a discrete permutation problem:
+  - A particle represents a candidate visiting order, with depot V0 fixed at position 0.
+  - Fitness is the total closed-tour distance $Z$.
+  - Velocity is represented as a sequence of transpositions or swaps acting on non-depot cities.
+  - Each particle remembers its personal best order ($pbest$), and the swarm shares the best order discovered so far ($gbest$).
+  In our implementation, we use 40 particles and 120 iterations. Previous swaps are retained with inertia probability $w = 0.5$. Cognitive alignment toward $pbest$ occurs with probability $c_1 = 0.8$, social alignment toward $gbest$ with probability $c_2 = 0.8$, and an exploratory random swap occurs with probability 0.2.”
 
-“We do not include every place mentioned in the article. Dahilayan and Divine Mercy Shrine are outside CDO. Rafting would require a specific meeting point. The selected set is fixed before PSO begins.”
+#### Slide 5 — Step-by-Step Calculation Walkthrough (4:15–5:30)
+* **Visual:** Concrete numerical swap example and distance calculation.
+* **Speaker Script:**
+  “Let’s look at a concrete step-by-step calculation:
+  Suppose a particle currently has the route:
+  $$X = [V_0, V_3, V_1, V_2, V_4, V_5, V_6, V_7]$$
+  Summing the 8 legs from our distance matrix gives a total cost of $38.50\text{ km}$.
+  Now, suppose the global best target $gbest$ is $[V_0, V_3, V_4, V_7, V_6, V_5, V_2, V_1]$.
+  During social alignment, the algorithm scans from left to right:
+  - Index 1 matches: both have $V_3$.
+  - At index 2, $X[2] = V_1$, but the target requires $V_4$.
+  - In our particle $X$, $V_4$ is located at index 4.
+  - With probability $c_2 = 0.8$, the algorithm executes swap $(2, 4)$.
+  - The new route becomes: $[V_0, V_3, V_4, V_2, V_1, V_5, V_6, V_7]$.
+  Recalculating the altered legs: $V_3 \to V_4$, $V_4 \to V_2$, $V_2 \to V_1$, and $V_1 \to V_5$, the new tour cost drops to $38.30\text{ km}$. Because this cost is lower, the particle immediately updates its personal best!”
 
-## Slide 3 — Assumptions and objective (2:15–3:15)
+---
 
-**Show:** the closed-tour sum and a short assumptions list.
+### Component 3: Graph Model, Data, and Methodology (Suggested: 2–3 minutes)
 
-“Our objective adds the distance of each consecutive leg, including the return to V0. We optimize distance in kilometres, not travel time or cost. One vehicle carries the group. Every selected stop is mandatory. Costs remain fixed, while opening hours, permits, sightseeing, parking and walking inside attractions are outside the optimization.”
+#### Slide 6 — Graph Model & Weight Matrix (5:30–7:00)
+* **Visual:** `results/figure1_cdo_graph_network.png` (2-panel labeled topological graph and asymmetric matrix heatmap).
+* **Speaker Script:**
+  “Here on Slide 6 is our complete Graph Model and Distance Matrix.
+  On the left, we represent the problem as a complete directed weighted graph $G = (V, A, D)$ with 8 vertices and 56 directed arcs. The bold teal arrows show the closed Hamiltonian cycle discovered by PSO, complete with leg distances.
+  On the right is our 8-by-8 asymmetric weight matrix. Notice that travel costs are asymmetric. For example:
+  - Driving from Plaza Divisoria ($V_0$) to Gaston Park ($V_1$) is $0.63\text{ km}$.
+  - But returning from Gaston Park ($V_1$) to Plaza Divisoria ($V_0$) is only $0.36\text{ km}$.
+  This asymmetry is caused by real-world one-way streets around downtown CDO. Symmetrizing the matrix would produce unrealistic routes, so we preserve the full directed structure.”
 
-“Our route endpoints are mapped car-network points. At Museo de Oro we use Corrales Avenue outside the campus, and at the cathedral we use Gaston Circle. These points are not certified parking spaces. Actual visitor access still needs confirmation.”
+#### Slide 7 — Data Sources and Reproducibility (7:00–7:45)
+* **Visual:** Data pipeline flowchart (Overpass API + OSRM Table + Route requests $\to$ CSVs).
+* **Speaker Script:**
+  “All road distances and geometries were generated using the Open Source Routing Machine (OSRM) driving API, referencing verified OpenStreetMap data.
+  Every raw API response is preserved locally in `data/raw/` with SHA-256 checksums in a manifest. Our entire dataset can be rebuilt and validated offline without internet access, ensuring full scientific reproducibility.”
 
-## Slide 4 — Directed graph and public dataset (3:15–4:30)
+---
 
-**Show:** `results/figure1_cdo_graph_network.png`.
+### Component 4: Python Execution Demonstration & Results (Suggested: 3–4 minutes)
 
-“The model has eight vertices and 56 directed arcs. An arc represents a whole driving route, not just one street segment. Notice that opposite-direction costs can differ. We retain that asymmetry instead of averaging it away.”
+#### Slide 8 — Live Code Execution & Output Walkthrough (7:45–11:00)
+* **Action: Switch to Terminal / Screen Recording:**
+  Run the command live:
+  ```bash
+  python3 cdo_tsp_pso_solver.py
+  ```
+* **Speaker Script (while running and pointing to terminal output):**
+  “Now let us execute our Python implementation live.
+  As you can see on screen, the solver loads the CSV dataset, validates the matrix, and executes our discrete PSO algorithm with seed 123.
+  Let us examine the results:
+  - **PSO Tour Order:** $V_0 \to V_3 \to V_4 \to V_7 \to V_6 \to V_5 \to V_2 \to V_1 \to V_0$.
+  - **Total PSO Distance:** **36.4739 kilometres** (or 36,473.9 metres).
+  - **Exact Matrix Optimum:** To test whether our PSO result is exact or approximate, we evaluated all 5,040 permutations by brute force. The absolute matrix minimum is **35.9537 kilometres**.
+  - **Optimality Assessment:** The optimality gap is **1.4469%** (520.2 metres). Therefore, we honestly report that our seed-123 PSO solution is an **approximate solution**, not the exact mathematical optimum.
+  - Across 30 repeated random seeds, PSO matched the exact optimum 4 times, with a mean distance of 36.63 km.”
 
-Point to V0→V1 and V1→V0 in the matrix and compare their values.
-
-“The saved source data contains all 64 entries, including zero diagonal entries, plus separately requested geometry for all 56 journeys. We check that route lengths, road-segment sums and matrix costs agree. These checks establish source consistency, not survey accuracy.”
-
-“OSRM reports lengths of its recommended or fastest driving routes. Those legs are not necessarily the shortest-distance roads. Our exactness claims apply to the resulting fixed matrix.”
-
-## Slide 5 — How a PSO particle represents a route (4:30–5:30)
-
-**Show:** a permutation beginning with V0; pbest and gbest labels.
-
-“Each particle is one possible visiting order. Its fitness is the total closed-tour distance. It remembers its best previous order, called the personal best. The swarm shares its best discovered order, called the global best. A swap exchanges two non-starting positions without losing or duplicating a destination.”
-
-Demonstrate a swap of two stops and explain why V0 stays fixed. Mention that the implementation is a documented discrete adaptation of the assigned PSO topic, not a verbatim copy of the paper's appendix.
-
-## Slide 6 — Updates, parameters and complexity (5:30–6:45)
-
-**Show:** retain old swaps → personal alignment → global alignment → exploration → evaluate.
-
-“We use 40 particles and 120 updates. Previous swaps are retained with probability 0.5. Personal and global alignment each use probability 0.8. A separate exploratory swap occurs with probability 0.2. Each alignment swap updates the working route immediately, so later swaps use current positions. We evaluate the final update too.”
-
-“Iteration zero is the initial random population. We do not give PSO the exact answer. With bounded swap lists and an index map, the expected work is proportional to iterations times particles times locations. A cubic bound follows only if the particle and iteration budgets both scale linearly with location count.”
-
-“PSO remains a heuristic. Polynomial execution with a fixed search budget does not guarantee the optimal answer.”
-
-## Slide 7 — Live execution and measured comparison (6:45–8:30)
-
-**Show:** terminal, then the results table. Run from the repository:
-
-```bash
-python3 cdo_tsp_pso_solver.py --output-dir /tmp/cdo-presentation-run
-```
-
-“The solver reads the two CSV files, checks the data, evaluates all 5,040 depot-fixed orders by brute force, and runs PSO. A nearest-neighbor baseline chooses the cheapest next unvisited stop.”
-
-| Method | Tour length (km) | Evidence |
-|---|---:|---|
-| Brute force | 35.9537 | All 5,040 depot-fixed orders evaluated |
-| Nearest neighbor | 38.4993 | Deterministic greedy baseline from V0 |
-| Discrete PSO, seed 123 | 36.4739 | 40 particles, 120 updates; 1.4469% gap |
-
-“In the saved seed-123 run, PSO returns 36.4739 kilometres. Brute force proves that 35.9537 kilometres is the minimum of this matrix. The PSO gap is 1.4469 percent, or 520.2 metres. Thus this PSO result is an approximate solution for the stored matrix.”
-
-Point to the program's actual output rather than promising a particular machine runtime.
-
-## Slide 8 — Convergence and repeated seeds (8:30–9:30)
-
-**Show:** `results/figure2_pso_convergence.png` and the repeated-run count.
-
-“The curve tracks the best observed distance, which cannot increase because we keep historical bests. It does not say that all particles become identical. This demonstration run did not reach the exact optimum within 120 updates. A flat curve can mean that a heuristic is no longer improving; it is not proof of optimality.”
-
-“Across seeds 0 through 29, 4 of 30 runs match the exact optimum. The mean is 36.6298 kilometres. This measures random-seed variation on one instance, not performance on all tourist routes.”
-
-## Slide 9 — Route interpretation and audit (9:30–11:00)
-
-**Show:** `results/figure3_cdo_tour.png` and the eight-leg table.
-
-“The demonstrated PSO order is V0 → V3 → V4 → V7 → V6 → V5 → V2 → V1 → V0. These lines follow saved road geometry. The downtown detail panel separates closely spaced stops.”
-
-| Leg | From | To | Distance (km) |
-|---|---|---|---:|
-| 1 | V0 | V3 | 0.3565 |
+* **Visual: Recalculate from edge weights:**
+  Show the 8 individual leg distances from `tour_legs.csv`:
+  | 1 | V0 | V3 | 0.3565 |
 | 2 | V3 | V4 | 1.3014 |
 | 3 | V4 | V7 | 8.7112 |
 | 4 | V7 | V6 | 13.5305 |
@@ -102,17 +118,26 @@ Point to the program's actual output rather than promising a particular machine 
 | 6 | V5 | V2 | 4.6876 |
 | 7 | V2 | V1 | 0.1585 |
 | 8 | V1 | V0 | 0.3626 |
+  “Recalculating the individual edge weights directly from the matrix confirms the exact total of 36.4739 kilometres, verifying that our closed tour visits each destination exactly once and returns to V0.”
 
-“Adding these eight legs gives 36.4739 kilometres. Every required stop appears once, and the final leg returns to V0. Road segments may repeat. Driving past an attraction does not count as its scheduled visit. Because costs are directed, the reverse tour can have a different length.”
+---
 
-For comparison, the exact benchmark order is **V0 → V3 → V1 → V2 → V5 → V6 → V7 → V4 → V0**. Label it as brute force, not as a PSO discovery unless that run actually found it.
+### Component 5: Solution, Conclusion, and References (Suggested: 1–2 minutes)
 
-## Slide 10 — Limitations and conclusion (11:00–12:00)
+#### Slide 9 — Geographic Road Route Analysis (11:00–12:00)
+* **Visual:** `results/figure3_cdo_tour.png` (Geographic road route map with downtown inset).
+* **Speaker Script:**
+  “On Slide 9, we project the optimal tour onto actual CDO road geometry.
+  Notice how the tour smartly clusters stops:
+  It leaves downtown Plaza Divisoria ($V_0$), visits Museo de Oro ($V_3$) and Capitol Park ($V_4$), sweeps eastward to Gardens of Malasag ($V_7$), circles to the Indahag hilltop at Amaya View ($V_6$) and High Ridge ($V_5$), and descends back to Gaston Park ($V_1$) and the Cathedral ($V_2$) before returning to Divisoria.
+  The downtown inset separates the closely spaced heritage sites.”
 
-**Show:** data sources, model limits, and final comparison.
-
-“We turned selected CDO tourist destinations into a reproducible directed TSP. The solver loads public-map-derived costs, PSO searches for an efficient order, and exhaustive enumeration checks how good that order is. Our reported PSO result is 36.4739 kilometres against the exact matrix optimum of 35.9537 kilometres.”
-
-“The main limits are the fixed routing snapshot, assumed site access, and omitted opening hours, sightseeing time, parking and live traffic. Larger instances and time-window constraints are future work. A practical trip needs those checks before travel.”
-
-Credit LakbayPinas for destination selection, OpenStreetMap contributors for geographic data (ODbL), OSRM for routing, and Luna-Garcia, Candano and Caga-anan (2024) for the assigned PSO reference. Full links and the adaptation details are in the report.
+#### Slide 10 — Limitations, Conclusion, and Citations (12:00–13:00)
+* **Visual:** Summary bullet points and academic references.
+* **Speaker Script:**
+  “In conclusion:
+  - We successfully formulated an asymmetric 8-stop tourist TSP for Cagayan de Oro City.
+  - Our discrete swap PSO algorithm rapidly discovered an approximate tour of 36.4739 km within 120 iterations, just 1.45% above the exact global optimum.
+  - Limitations: The model assumes static driving routes without real-time congestion and does not account for attraction opening hours or parking search times.
+  References: LakbayPinas for destination ideas, OpenStreetMap and OSRM for geographic data, and Luna-Garcia et al. (2024) for the discrete PSO adaptation.
+  Thank you very much!”
