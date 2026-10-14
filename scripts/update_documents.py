@@ -250,6 +250,8 @@ The original delivery dataset, solver, report, notebook and images remain in `ar
 3. [OSRM API documentation](https://project-osrm.org/docs/v5.24.0/api/). Driving table and route semantics; raw responses retained locally.
 4. Luna-Garcia, R., Candano, T. M. C., and Caga-anan, R. L. (2024). [Performance Analysis of Classical Algorithms for the Traveling Salesman Problem](https://doi.org/10.62071/tmjm.v6i2.716). The Mindanawan Journal of Mathematics, 6(2), 79–111. Assigned PSO reference; implementation adaptations are stated in Section 4.
 """
+    (ROOT / "docs").mkdir(exist_ok=True)
+    (ROOT / "docs/CDO_TSP_PSO_Report.md").write_text(report)
     (ROOT / "CDO_TSP_PSO_Report.md").write_text(report)
 
     readme = f"""# Cagayan de Oro tourist TSP using discrete PSO
@@ -290,11 +292,48 @@ The matrix is asymmetric. OSRM table lengths follow its recommended/fastest car 
 
 Distances retain provider precision, not survey accuracy. All raw routes are checked against table values and segment sums. The normal workflow needs no API key or internet. A new source snapshot is an explicit operation: `python3 scripts/fetch_sources.py --output /tmp/cdo-new-sources`.
 
+## Repository Structure
+
+```text
+Particle-Swarm-Optimization/
+├── presentation/              # Presentation slides, script, and web deck
+│   ├── CDO_TSP_PSO_Presentation.pptx  # 16:9 Widescreen PowerPoint slide deck
+│   ├── index.html                     # Interactive browser slide deck (with speaker notes)
+│   ├── CDO_TSP_Presentation_Script.md # Word-for-word 10–15 min presentation script
+│   └── CDO_TSP_Presentation_Slides.marp.md # Marp markdown presentation slides
+├── docs/                      # Formal written documentation
+│   ├── CDO_TSP_PSO_Report.md          # Comprehensive PIT project report
+│   └── IMPLEMENTATION_PLAN.md         # Implementation and architecture plan
+├── data/                      # Input datasets and raw acquisition payloads
+│   ├── README.md                      # Data provenance & access documentation
+│   ├── attractions.json               # CDO attractions metadata & drop-off coordinates
+│   ├── dataset_audit.json             # Verification audit metrics & OSM timestamps
+│   ├── routes.geojson                 # 56 directed OSRM road geometries
+│   └── raw/                           # Raw OpenStreetMap / OSRM API responses
+├── results/                   # Output figures, logs, and interactive maps
+│   ├── figure1_cdo_graph_network.png  # Labeled topological digraph & weight heatmap
+│   ├── figure2_pso_convergence.png    # Seeded PSO convergence curve (100 iter)
+│   ├── figure3_cdo_tour.png           # Geographic road route map with downtown inset
+│   ├── cdo_tour_interactive_map.html  # Interactive Leaflet route map (Google/CartoDB)
+│   ├── summary.json                   # Machine-readable solver verification audit
+│   ├── tour_legs.csv                  # Individual edge lengths and verified tour sum
+│   ├── convergence.csv                # Best tour cost per iteration
+│   └── repeated_runs.csv              # 30-seed stability benchmark results
+├── scripts/                   # Data pipeline, map generation, and pptx tools
+├── tests/                     # 15 automated unit tests (test_tsp.py)
+├── cdo_tsp_pso_solver.py      # Core Discrete PSO TSP solver (Standard library)
+├── cdo_tsp_plots.py           # Matplotlib visualization script
+├── cdo_tsp_pso_notebook.ipynb # Interactive Jupyter notebook walkthrough
+├── cdo_tsp_dataset.csv        # 64-entry directed distance matrix (m)
+├── cdo_tsp_locations.csv      # 8-node verified location table
+└── requirements.txt           # Python dependencies
+```
+
 ## Implementation and outputs
 
-The focus of this project is the **discrete swap PSO** assigned algorithm. Exact brute force is included as an optimality verification anchor, and nearest neighbor as an optional baseline. The PSO adaptation uses valid probabilities, sequential alignment, retained velocity and explicit exploratory swaps.
+The focus of this project is the **discrete swap PSO** assigned algorithm (Section 2.4). Exact brute force is included as an optimality verification anchor, and nearest neighbor as an optional baseline. The PSO adaptation uses valid probabilities, sequential alignment, retained velocity and explicit exploratory swaps.
 
-`results/summary.json`, `convergence.csv`, `repeated_runs.csv`, and `tour_legs.csv` contain measured outputs. Three PNGs show the directed cost matrix, convergence, and road-route geometry. Read [the report](CDO_TSP_PSO_Report.md) and [presentation script](CDO_TSP_Presentation_Script.md) for the problem, methods, results and caveats.
+`results/summary.json`, `convergence.csv`, `repeated_runs.csv`, and `tour_legs.csv` contain measured outputs. Three PNGs show the directed cost matrix, convergence, and road-route geometry. Read [the report](docs/CDO_TSP_PSO_Report.md) and [presentation script](presentation/CDO_TSP_Presentation_Script.md) for the problem, methods, results and caveats.
 
 After deliberately updating inputs, rerun the experiment and then `python3 scripts/update_documents.py` to refresh the report, README and script from current results. For new cost data, map geometry must also match; otherwise use `--no-plots`. Old results are not automatically evidence for edited CSVs.
 
@@ -442,6 +481,8 @@ Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright
   Thank you very much!”
 """
     script = script.replace("\n" + leg_rows + "\n", "\n| Leg | From | To | Distance (km) |\n|---|---|---|---:|\n" + leg_rows + "\n")
+    (ROOT / "presentation").mkdir(exist_ok=True)
+    (ROOT / "presentation/CDO_TSP_Presentation_Script.md").write_text(script)
     (ROOT / "CDO_TSP_Presentation_Script.md").write_text(script)
     print("Updated report, README and presentation notes from current results")
 

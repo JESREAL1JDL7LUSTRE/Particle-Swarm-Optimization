@@ -37,6 +37,8 @@ def create_presentation():
     LINE_BORDER = RGBColor(58, 80, 107)   # #3A506B Subtle Border
 
     results_dir = Path("results").resolve()
+    presentation_dir = Path("presentation").resolve()
+    presentation_dir.mkdir(parents=True, exist_ok=True)
     fig1_path = results_dir / "figure1_cdo_graph_network.png"
     fig2_path = results_dir / "figure2_pso_convergence.png"
     fig3_path = results_dir / "figure3_cdo_tour.png"
@@ -598,7 +600,7 @@ def create_presentation():
         "Thank you very much!"
     )
 
-    out_path = results_dir / "CDO_TSP_PSO_Presentation.pptx"
+    out_path = presentation_dir / "CDO_TSP_PSO_Presentation.pptx"
     prs.save(str(out_path))
     print(f"SUCCESS: Presentation saved to {out_path}")
     return True

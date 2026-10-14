@@ -193,7 +193,7 @@ The new route becomes [V0, V3, V4, V2, V1, V5, V6, V7]. Recalculating the altere
 ## 5. Graph Model & Distance Matrix
 <span class="badge">Component 3: Figure 1</span>
 
-![bg right:55% 95%](results/figure1_cdo_graph_network.png)
+![bg right:55% 95%](../results/figure1_cdo_graph_network.png)
 
 ### Key Graph Characteristics
 - **Graph Topology:** Complete directed graph $G = (V, A, D)$ with 8 nodes and 56 arcs.
@@ -300,7 +300,7 @@ Recalculating the individual edge weights directly from the matrix confirms the 
 ## 8. Geographic Road Route Analysis
 <span class="badge">Component 5: Geographic Projection</span>
 
-![bg right:55% 95%](results/figure3_cdo_tour.png)
+![bg right:55% 95%](../results/figure3_cdo_tour.png)
 
 ### Spatial Clustering Insights
 1. **Downtown Heritage Cluster:**  
