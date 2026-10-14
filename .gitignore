@@ -1,0 +1,9 @@
+# Ignored task specification and source paper
+Performance_Innovative_Task_TSP (1).md
+Published-paper (1).md
+
+# Python & Jupyter cache
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
