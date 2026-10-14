@@ -1,0 +1,246 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-10-14T03:56:02Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "way",
+  "id": 114444358,
+  "bounds": {
+    "minlat": 8.4769909,
+    "minlon": 124.6459960,
+    "maxlat": 8.4772880,
+    "maxlon": 124.6460616
+  },
+  "nodes": [
+    4889461549,
+    4889475248
+  ],
+  "geometry": [
+    { "lat": 8.4769909, "lon": 124.6459960 },
+    { "lat": 8.4772880, "lon": 124.6460616 }
+  ],
+  "tags": {
+    "cycleway": "no",
+    "designation": "city_road",
+    "highway": "tertiary",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "30",
+    "maxspeed:type": "PH:urban",
+    "name": "Corrales Avenue",
+    "nat_name": "South Divisoria",
+    "oneway": "yes",
+    "sidewalk": "both",
+    "source": "Bing",
+    "source:nat_name": "DPWH-RBI",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 114444363,
+  "bounds": {
+    "minlat": 8.4763816,
+    "minlon": 124.6458616,
+    "maxlat": 8.4769909,
+    "maxlon": 124.6459960
+  },
+  "nodes": [
+    282305275,
+    10826184105,
+    1921361471,
+    4889461549
+  ],
+  "geometry": [
+    { "lat": 8.4763816, "lon": 124.6458616 },
+    { "lat": 8.4766230, "lon": 124.6459140 },
+    { "lat": 8.4766880, "lon": 124.6459272 },
+    { "lat": 8.4769909, "lon": 124.6459960 }
+  ],
+  "tags": {
+    "cycleway": "no",
+    "highway": "tertiary",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "30",
+    "maxspeed:type": "PH:urban",
+    "name": "Corrales Avenue",
+    "oneway": "yes",
+    "sidewalk": "both",
+    "source": "Bing",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 141722276,
+  "bounds": {
+    "minlat": 8.4749051,
+    "minlon": 124.6420850,
+    "maxlat": 8.4752651,
+    "maxlon": 124.6425832
+  },
+  "nodes": [
+    5568020401,
+    5568020414,
+    1911435368,
+    5568020415,
+    5568020413,
+    5568020416,
+    1551375880,
+    1911435360,
+    4901532690,
+    1551375878
+  ],
+  "geometry": [
+    { "lat": 8.4752651, "lon": 124.6425832 },
+    { "lat": 8.4751649, "lon": 124.6425404 },
+    { "lat": 8.4750811, "lon": 124.6424902 },
+    { "lat": 8.4750325, "lon": 124.6424502 },
+    { "lat": 8.4750029, "lon": 124.6424141 },
+    { "lat": 8.4749654, "lon": 124.6423566 },
+    { "lat": 8.4749582, "lon": 124.6423368 },
+    { "lat": 8.4749431, "lon": 124.6422953 },
+    { "lat": 8.4749200, "lon": 124.6421860 },
+    { "lat": 8.4749051, "lon": 124.6420850 }
+  ],
+  "tags": {
+    "highway": "tertiary",
+    "lanes": "2",
+    "lit": "yes",
+    "maxspeed": "30",
+    "maxspeed:type": "PH:urban",
+    "name": "Gaston Circle",
+    "oneway": "yes",
+    "sidewalk": "right",
+    "source:maxspeed": "PH:urban",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 180693017,
+  "bounds": {
+    "minlat": 8.4749051,
+    "minlon": 124.6415980,
+    "maxlat": 8.4755095,
+    "maxlon": 124.6420850
+  },
+  "nodes": [
+    1551375878,
+    1448854434,
+    4901532689,
+    1911435366,
+    1551375879,
+    1911435359,
+    1551375883,
+    1911435364,
+    1551375884,
+    1911435362,
+    4901532696,
+    4901532691,
+    1911435367,
+    1551375912
+  ],
+  "geometry": [
+    { "lat": 8.4749051, "lon": 124.6420850 },
+    { "lat": 8.4749255, "lon": 124.6419755 },
+    { "lat": 8.4749522, "lon": 124.6419129 },
+    { "lat": 8.4749840, "lon": 124.6418549 },
+    { "lat": 8.4750248, "lon": 124.6417962 },
+    { "lat": 8.4750856, "lon": 124.6417411 },
+    { "lat": 8.4751332, "lon": 124.6416980 },
+    { "lat": 8.4752057, "lon": 124.6416540 },
+    { "lat": 8.4752577, "lon": 124.6416295 },
+    { "lat": 8.4752997, "lon": 124.6416176 },
+    { "lat": 8.4753453, "lon": 124.6416110 },
+    { "lat": 8.4753591, "lon": 124.6416098 },
+    { "lat": 8.4754346, "lon": 124.6416092 },
+    { "lat": 8.4755095, "lon": 124.6415980 }
+  ],
+  "tags": {
+    "highway": "tertiary",
+    "lanes": "2",
+    "lit": "yes",
+    "maxspeed": "30",
+    "maxspeed:type": "PH:urban",
+    "name": "Gaston Circle",
+    "oneway": "no",
+    "sidewalk": "both",
+    "source:maxspeed": "PH:urban",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 405820903,
+  "bounds": {
+    "minlat": 8.4748081,
+    "minlon": 124.6454500,
+    "maxlat": 8.4757726,
+    "maxlon": 124.6457003
+  },
+  "nodes": [
+    5503788283,
+    4933512787,
+    4889563160
+  ],
+  "geometry": [
+    { "lat": 8.4748081, "lon": 124.6454500 },
+    { "lat": 8.4753922, "lon": 124.6456045 },
+    { "lat": 8.4757726, "lon": 124.6457003 }
+  ],
+  "tags": {
+    "cycleway": "no",
+    "highway": "tertiary",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "30",
+    "maxspeed:type": "PH:urban",
+    "name": "Corrales Avenue",
+    "oneway": "yes",
+    "sidewalk": "both",
+    "source": "Bing",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 690854902,
+  "bounds": {
+    "minlat": 8.4757726,
+    "minlon": 124.6457003,
+    "maxlat": 8.4763816,
+    "maxlon": 124.6458616
+  },
+  "nodes": [
+    282305275,
+    7655144218,
+    4889563160
+  ],
+  "geometry": [
+    { "lat": 8.4763816, "lon": 124.6458616 },
+    { "lat": 8.4760436, "lon": 124.6457732 },
+    { "lat": 8.4757726, "lon": 124.6457003 }
+  ],
+  "tags": {
+    "cycleway": "no",
+    "highway": "tertiary",
+    "lanes": "4",
+    "lit": "yes",
+    "maxspeed": "30",
+    "maxspeed:type": "PH:urban",
+    "name": "Corrales Avenue",
+    "sidewalk": "both",
+    "source": "Bing",
+    "surface": "concrete"
+  }
+}
+
+  ]
+}

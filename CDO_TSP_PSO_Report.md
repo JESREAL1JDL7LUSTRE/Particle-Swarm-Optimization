@@ -1,277 +1,171 @@
-# PERFORMANCE INNOVATIVE TASK: TRAVELING SALESPERSON PROBLEM (TSP)
-## Optimization of Last-Mile Commercial Delivery Routing in Cagayan de Oro City Using Particle Swarm Optimization (PSO)
+# Optimizing a Cagayan de Oro Tourist Driving Tour Using Particle Swarm Optimization
 
-**Course:** Graph Theory  
-**Assigned Algorithm:** Section 2.4 — Particle Swarm Optimization (PSO)  
-**Primary Reference:** Luna-Garcia, R., Candano, T. M. C., & Caga-anan, R. L. (2024). *Performance Analysis of Classical Algorithms for the Traveling Salesman Problem*. The Mindanawan Journal of Mathematics (TMJM), MSU-Iligan Institute of Technology, Vol. 6, No. 2, pp. 79–111. https://doi.org/10.62071/tmjm.v6i2.716  
-**Application Territory:** Cagayan de Oro City, Misamis Oriental, Philippines  
-**Objective:** Minimize Total Road Travel Distance (km) via Google Maps Driving Network  
+**Course:** Graph Theory
+**Application:** Eight selected tourist destinations within Cagayan de Oro City
+**Objective:** Minimize total inter-stop driving distance in a closed tour
+**Result:** PSO 36.4739 km; exact matrix optimum 35.9537 km; gap 1.4469%.
+**Scope:** Static map-derived car-route costs. This is not a verified daily travel schedule.
 
----
+## 1. Problem and objective
 
-## 1. Discussion of the Assigned Algorithm: Particle Swarm Optimization (PSO)
+A group of tourists hires one vehicle to visit eight selected attractions in Cagayan de Oro. The group meets at Plaza Divisoria, visits each of the seven other selected destinations, and returns to the starting point. A driver needs an efficient visiting order that reduces the combined driving distance between stops.
 
-### 1.1 Conceptual Background and Principles
-Particle Swarm Optimization (PSO) is a population-based stochastic metaheuristic algorithm originally conceptualized by Dr. James Kennedy and Dr. Russell Eberhart in 1995, inspired by the collective choreography and social foraging behavior observed in bird flocks and fish schools. In classical continuous optimization, each candidate solution is modeled as a "particle" floating through an $n$-dimensional continuous search space, adjusting its trajectory based on its own experiential memory and the collective knowledge of the swarm.
+The destinations are selected from the [LakbayPinas travel guide](https://lakbaypinas.com/19-must-visit-cagayan-de-oro-tourist-spots-travel/), published March 7, 2025. This project uses eight CDO destinations from that article, not all places in its title. Selection was fixed before optimization; PSO chooses the order, not which attractions are worth visiting. The article supplies destination ideas, not our road-distance values.
 
-To solve discrete combinatorial problems such as the Traveling Salesperson Problem (TSP), continuous vector addition and scalar multiplication cannot be directly applied because tours are permutations of discrete vertices. As formalized in Section 2.4 and Appendix 4.4 of Luna-Garcia et al. (2024), discrete TSP adaptation replaces continuous velocity with a **sequence of swap operators (transpositions)**:
-- **Particle Position ($X_i$):** Encoded as a discrete permutation vector of $n$ cities representing a Hamiltonian cycle (e.g., $X_i = [\pi_0, \pi_1, \dots, \pi_{n-1}]$).
-- **Swap Operator ($SO(j, k)$):** An elementary transposition that exchanges the positions of elements at index $j$ and index $k$.
-- **Velocity ($V_i$):** A finite ordered list of swap operators $V_i = [SO_1, SO_2, \dots, SO_m]$.
-- **Position Update ($X_i \leftarrow X_i \oplus V_i$):** Applying the swap operators sequentially transforms the current tour into a new candidate tour.
+The area spans the downtown heritage cluster, the provincial-capitol area, Macasandig, Indahag, and the Malasag/Cugman area. The hilltop stops motivate a driving model. Dahilayan and Divine Mercy Shrine are excluded because they lie outside CDO. Rafting is not represented as a single location without a specified operator/meeting point.
 
-```
-       [ Inertia Component (w) ]  ---> Random Exploratory Swaps
-                   +
-Particle Velocity  [ Cognitive Component (c1) ] ---> Transpositions toward Personal Best (pbest)
-                   +
-       [ Social Component (c2) ]   ---> Transpositions toward Swarm Global Best (gbest)
-```
+### Starting location and required locations
 
-### 1.2 Step-by-Step Procedure
-Algorithm 2.4 from the published paper executes according to the following systematic stages:
+V0 is the modeled meeting/return point on the car network beside Plaza Divisoria. V1–V7 are mandatory stops. Coordinates below are the **routing points**, not automatically the attraction centres or official entrances.
 
-1. **Swarm Initialization:**
-   - Instantiate a swarm population of $P$ particles.
-   - For each particle $i \in \{1, \dots, P\}$, generate a random permutation of all $n$ vertices: $X_i = \text{random\_permutation}(0, 1, \dots, n-1)$.
-   - Initialize velocity as an empty list $V_i = []$.
-   - Set the personal best position ($pbest_i$) to $X_i$ and personal best fitness to infinity ($pbest\_cost_i = \infty$).
-   - Set the global best position ($gbest$) to null and global best fitness to infinity ($gbest\_cost = \infty$).
+| Node | Tourist destination | Role | Route latitude | Route longitude |
+|---|---|---|---:|---:|
+| V0 | Plaza Divisoria | Start/finish | 8.4775890 | 124.6437690 |
+| V1 | Gaston Park | Required tourist stop | 8.4754050 | 124.6425870 |
+| V2 | St. Augustine Metropolitan Cathedral | Required tourist stop | 8.4750860 | 124.6417410 |
+| V3 | Museo de Oro | Required tourist stop | 8.4760440 | 124.6457730 |
+| V4 | Vicente de Lara Park | Required tourist stop | 8.4854960 | 124.6476700 |
+| V5 | High Ridge | Required tourist stop | 8.4623660 | 124.6479350 |
+| V6 | Amaya View | Required tourist stop | 8.4230930 | 124.6573050 |
+| V7 | Gardens of Malasag Eco-Tourism Village | Required tourist stop | 8.4580580 | 124.7000740 |
 
-2. **Fitness Evaluation:**
-   - For each particle $i$, evaluate the total closed tour distance:
-     $$f(X_i) = \sum_{k=0}^{n-2} D[X_i[k]][X_i[k+1]] + D[X_i[n-1]][X_i[0]]$$
-     where $D$ is the pairwise road driving distance matrix.
-   - If $f(X_i) < pbest\_cost_i$, update:
-     $$pbest_i \leftarrow X_i, \quad pbest\_cost_i \leftarrow f(X_i)$$
-   - If $f(X_i) < gbest\_cost$, update:
-     $$gbest \leftarrow X_i, \quad gbest\_cost \leftarrow f(X_i)$$
+The full location table, source-object URLs, attraction coordinates, request coordinates, snapping distances and access assumptions are in `cdo_tsp_locations.csv`. Museo de Oro uses a road point on Corrales Avenue outside the campus. The cathedral uses a point on Gaston Circle. Their mapped road-node evidence is saved. Other sites use nearby points selected by the car-routing service; these are not verified parking spaces.
 
-3. **Velocity Construction (Three Behavioral Components):**
-   For each particle $i$, construct a composite sequence of swap operators:
-   - **(a) Inertia Component ($w$):** With probability $w$, generate random index pairs $(j, k)$ where $j, k \in \{0, \dots, n-1\}$, allowing the particle to retain momentum and explore unvisited regions of the permutation space.
-   - **(b) Cognitive Component ($c_1$):** For each index $k \in \{0, \dots, n-1\}$, with probability $c_1$, if $X_i[k] \neq pbest_i[k]$, identify the index $j$ where $X_i[j] = pbest_i[k]$ and append the transposition swap $(j, k)$ to $V_i$.
-   - **(c) Social Component ($c_2$):** For each index $k \in \{0, \dots, n-1\}$, with probability $c_2$, if $X_i[k] \neq gbest[k]$, identify the index $j$ where $X_i[j] = gbest[k]$ and append the transposition swap $(j, k)$ to $V_i$.
+### Assumptions and constraints
 
-4. **Position Update:**
-   - Apply the constructed velocity sequence $V_i$ to $X_i$:
-     $$\forall (j, k) \in V_i: \quad \text{swap}(X_i[j], X_i[k])$$
-   - Store $V_i$ as the particle's active velocity.
+1. One group uses one vehicle; capacity and refuelling do not constrain the visiting order.
+2. Start and finish at V0. Schedule one visit to each other stop, with no omitted or duplicate stop.
+3. Every inter-stop leg uses the saved OSRM recommended driving route. Costs remain fixed during optimization.
+4. Direction matters: the distance from A to B can differ from B to A. The matrix is not symmetrized.
+5. The model assumes visitor access can be arranged. It does not enforce opening hours, permits, reservations or time windows, and makes no claim that all activities fit into one day.
+6. Parking searches, walking within attractions, sightseeing durations, admission fees, fuel prices and live traffic are outside the distance objective.
+7. Connecting roads may repeat or pass near a stop before its scheduled visit. Visiting each destination once does not forbid reusing streets.
+8. Access points are map-derived and have not been field-verified. Practical access must be checked before real travel.
 
-5. **Termination Criteria:**
-   - Repeat Steps 2 through 4 until reaching the maximum iteration count $T$ or until swarm convergence (no improvement over successive generations).
-   - Return $gbest$ and $gbest\_cost$.
+### Quantity minimized
 
-### 1.3 Asymptotic Time Complexity Analysis
-In Theorem 2.4 of the TMJM paper, Luna-Garcia et al. rigorously prove that the time complexity of the Discrete PSO algorithm for TSP is $\mathcal{O}(n^3)$:
+Let D[i,j] be the stored length of the recommended car route from stop i to stop j. For a permutation π of all eight nodes with π[0] = 0:
 
-> **Theorem 2.4 (Luna-Garcia et al., 2024):** *Let $n$ be the number of cities. The time complexity of the particle swarm optimization algorithm approach for TSP is $\mathcal{O}(n^3)$.*
+`minimize Z(π) = D[π[0],π[1]] + … + D[π[6],π[7]] + D[π[7],π[0]]`.
 
-**Proof:**
-1. **Initialization:** Initializing $P$ particles with random permutations of length $n$ requires $P \times n$ operations.
-2. **Fitness Calculation:** For each particle in each iteration, calculating the round-trip distance involves $n$ additions. Across $P$ particles, this takes $P \times n$ operations per iteration.
-3. **Velocity and Swap Updates:** Comparing a particle's current tour against $pbest$ and $gbest$ requires finding the position index of matching elements, which takes $\mathcal{O}(n)$ per element, resulting in $\mathcal{O}(n)$ operations per particle, or $P \times n$ operations across the swarm.
-4. **Total Work per Iteration:** Combining fitness evaluation and swap generation, each iteration takes $\mathcal{O}(P \times n)$.
-5. **Total Execution over $T$ Iterations:** Repeating for $T$ iterations yields a total computational time of:
-   $$T_{\text{total}}(n) = \mathcal{O}(T \times P \times n)$$
-6. In practical TSP scalability benchmarks, the swarm size $P$ and iteration budget $T$ are scaled linearly with the problem size ($P = \mathcal{O}(n)$ and $T = \mathcal{O}(n)$). Substituting these yields:
-   $$T_{\text{total}}(n) = \mathcal{O}(n \times n \times n) = \mathcal{O}(n^3) \quad \blacksquare$$
+Z is reported in kilometres. This optimizes distance, not duration or transportation cost. OSRM chooses its recommended/fastest road route for each pair; its returned distance is not necessarily the shortest possible road distance. Therefore optimality is defined relative to the **stored matrix**, not every possible physical driving path.
 
-### 1.4 Advantages and Limitations
+## 2. Public data and reproducibility
 
-| Dimension | Particle Swarm Optimization (PSO) | Exact Methods (Brute Force / Held-Karp DP) |
-|---|---|---|
-| **Optimality Guarantee** | **Approximate / Metaheuristic** (No theoretical guarantee of reaching global optimum) | **Exact** (Guaranteed mathematical global optimum) |
-| **Time Complexity** | **Polynomial $\mathcal{O}(n^3)$** | Factorial $\mathcal{O}(n!)$ or Exponential $\mathcal{O}(n^2 2^n)$ |
-| **Scalability** | Capable of scaling to hundreds of cities ($n=128, 256$) within seconds | Computationally infeasible for $n > 20$ due to combinatorial explosion |
-| **Exploration vs. Exploitation** | Balances individual cognitive learning with swarm-wide social cooperation | Exhaustive search of all permutations or subset combinations |
-| **Vulnerability** | Susceptible to premature convergence if cognitive/social parameters lack diversity | Consumes prohibitive memory $\mathcal{O}(n 2^n)$ in DP or astronomical CPU time |
+Attraction identities and coordinates come from OpenStreetMap. Pairwise distances and road polylines come from OSRM's public driving service. Raw responses and full request URLs are retained in `data/raw/`, along with UTC retrieval times and SHA-256 hashes. No Google Maps measurements or invented road distances are used for this tourist dataset.
 
----
+The source acquisition spans **2026-10-14T03:59:57.102255+00:00** to **2026-10-14T04:08:22.881088+00:00**. The Overpass response reports OSM base time **2026-10-14T03:58:17Z**. OSRM graph version: **Not supplied by public server**. These timestamps describe separate services and must not be treated as one identical map build.
 
-## 2. Real-Life Problem and Objective
+The offline builder verifies the raw checksums, eight selected objects, all 64 matrix entries, and all 56 separately requested non-diagonal routes. Route/table lengths agree within 0.00 m. It also checks road-segment sums and geometry endpoints. These are consistency checks, not a ground survey or proof of current site access.
 
-### 2.1 Problem Context: Last-Mile Delivery in Cagayan de Oro City
-Cagayan de Oro (CDO), the regional administrative center and economic gateway of Northern Mindanao (Region X), features a complex urban layout bisected by the Cagayan River, separating the eastern downtown commercial core from western districts (Carmen, Bulua) and the southern plateau (Pueblo de Oro Uptown).
+The largest snap from request coordinate to routing point is 49.244 m. The source table retains tenths of metres because that is the provider's output precision; real-world positional/distance accuracy is lower and unmeasured here. Integer decimetres are used internally solely to make tour sums and exact comparisons unambiguous.
 
-Express courier logistics companies operating in Cagayan de Oro (such as J&T Express, Flash Express, and LBC) dispatch multi-stop delivery vans every morning from a central dispatch depot to fulfill scheduled retail restocking, commercial package drops, and parcel deliveries across the city's highest-density commercial malls, seaports, and transit hubs.
+See [data/README.md](data/README.md) for access-point decisions, independent location corroboration, limitations and refresh instructions. © OpenStreetMap contributors; OSM-derived geographic and distance data are distributed under ODbL 1.0.
 
-Without optimized route planning, delivery vans often engage in erratic back-and-forth travel across the Ysalina and Kagay-an Bridges, compounding fuel consumption, driver fatigue, vehicle wear, and carbon emissions.
+## 3. Graph model
 
-```
-       [Bulua Westbound Terminal (V5)]          [Macabalan Seaport (V6)]
-                     \                               /
-                      \                             /
-              [Carmen Market (V4)] --- [Plaza Divisoria (V0)] --- [Downtown Malls (V1, V2, V3)]
-                       \
-                        \
-              [SM Uptown CDO (V7)]
-```
+The TSP is a complete directed weighted graph G = (V,A,D), with 8 vertices and 8 × 7 = **56 directed arcs**. Each arc represents one entire road journey between two modeled stops. Intermediate intersections belong to the underlying road network, not to the eight TSP vertices. Self-distances are zero and do not count as arcs.
 
-### 2.2 Depot and Delivery Locations
-The problem is modeled around **8 strategic commercial, maritime, transit, and retail nodes**:
+| From / To (km) | V0 | V1 | V2 | V3 | V4 | V5 | V6 | V7 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| V0 | 0.0000 | 0.6335 | 0.7440 | 0.3565 | 1.4477 | 4.4927 | 8.7986 | 9.7055 |
+| V1 | 0.3626 | 0.0000 | 0.1327 | 0.5190 | 1.3683 | 4.3810 | 8.6869 | 10.0795 |
+| V2 | 0.4957 | 0.1585 | 0.0000 | 0.5562 | 1.5101 | 4.3905 | 8.6964 | 10.2213 |
+| V3 | 0.4915 | 0.4734 | 0.5839 | 0.0000 | 1.3014 | 4.3326 | 8.6384 | 9.5591 |
+| V4 | 1.2053 | 1.3667 | 1.4995 | 1.2856 | 0.0000 | 5.4261 | 9.7320 | 8.7112 |
+| V5 | 4.8874 | 4.6504 | 4.6876 | 4.6020 | 5.7238 | 0.0000 | 7.0242 | 14.0057 |
+| V6 | 9.0449 | 8.8079 | 8.8451 | 8.7595 | 9.8813 | 7.3656 | 0.0000 | 13.6527 |
+| V7 | 9.9236 | 10.0851 | 10.2178 | 10.0039 | 8.7184 | 13.7256 | 13.5305 | 0.0000 |
 
-1. **$V_0$ — Plaza Divisoria / RN Abejuela St (Depot):** Starting and ending central courier dispatch hub in historic Downtown CDO.
-2. **$V_1$ — Ayala Malls Centrio:** Major high-density retail center along Claro M. Recto Avenue.
-3. **$V_2$ — SM CDO Downtown Premier:** Premier shopping complex and commercial tower at C.M. Recto Ave & Osmeña St.
-4. **$V_3$ — Limketkai Center:** 25-hectare commercial center and business hub in Lapasan.
-5. **$V_4$ — Carmen Commercial Center:** Major market and commercial district on the west bank of Cagayan River.
-6. **$V_5$ — Bulua Westbound Terminal:** Integrated provincial bus terminal and agricultural trading terminal in western CDO.
-7. **$V_6$ — Port of Cagayan de Oro (Macabalan Port):** Principal international container and passenger shipping seaport.
-8. **$V_7$ — SM City CDO Uptown (Pueblo de Oro):** Commercial anchor serving Upper Carmen and southern residential subdivisions.
+![Directed travel-cost matrix](results/figure1_cdo_graph_network.png)
 
-### 2.3 Relevant Assumptions and Operational Constraints
-1. **Single-Vehicle Hamiltonian Tour:** A single dedicated delivery vehicle departs from Depot $V_0$, visits all 7 client hubs $V_1, \dots, V_7$ exactly once, and completes its circuit back at $V_0$.
-2. **Deterministic Road Driving Distances:** Travel costs represent actual road network distances in kilometers (km) obtained via Google Maps driving directions under normal traffic conditions.
-3. **Symmetric Driving Approximation:** Major corridors (Recto Ave, Sayre Highway/Masterson Ave, National Highway, Macabalan access roads) permit two-way vehicular flow with comparable bidirectional distances.
-4. **Capacity Sufficiency:** The vehicle possesses sufficient cargo capacity to satisfy all scheduled deliveries in a single dispatch cycle.
+## 4. Assigned algorithm: discrete Particle Swarm Optimization
 
-### 2.4 Mathematical Objective
-The objective is to minimize the total road driving distance (in kilometers):
-$$\min Z = \sum_{i=0}^{n-1} D[\pi_i][\pi_{(i+1) \bmod n}]$$
-subject to:
-$$\pi \in \mathcal{S}_n, \quad \pi_0 = 0$$
-where $\mathcal{S}_n$ is the set of all permutations of vertices $\{0, 1, \dots, n-1\}$.
+PSO keeps a population of candidate solutions. Here a particle is a visiting order beginning at V0. Its personal best is its lowest-cost historical order; the swarm's global best is the lowest-cost order found by any particle. A velocity is a sequence of swaps between non-depot positions, which preserves the permutation constraint.
 
----
+This implementation is an explicit swap-based adaptation inspired by the PSO topic in Section 2.4 of Luna-Garcia et al. (2024). It is **not a verbatim reproduction of Appendix 4.4**. The changes and their probabilities are described below so the code and claims agree.
 
-## 3. Methodology and Graph Model
+### Update procedure
 
-### 3.1 Graph Theoretic Representation
-The CDO logistics network is formally formulated as a complete, weighted, undirected graph:
-$$G = (V, E, W)$$
-- **Vertex Set $V$:** $|V| = 8$, representing the designated physical locations:
-  $$V = \{v_0, v_1, v_2, v_3, v_4, v_5, v_6, v_7\}$$
-- **Edge Set $E$:** Complete edge set $|E| = \frac{n(n-1)}{2} = \frac{8 \times 7}{2} = 28$ undirected edges, representing navigable road connections between every pair of locations.
-- **Weight Function $W: E \to \mathbb{R}^+$:** Edge weights $w(v_i, v_j)$ quantify the Google Maps driving distance in kilometers (km).
+1. Initialize 40 random depot-fixed permutations, evaluate them, and save personal/global bests. Record this as iteration 0.
+2. For each update, freeze a copy of the global best as the shared target for that generation.
+3. Independently retain and apply each swap from the previous velocity with probability w = 0.5.
+4. Scan non-depot positions toward the personal best. When a position differs, accept an aligning swap with probability c1 = 0.8. Update the working permutation and its city-to-index map immediately.
+5. Repeat sequential alignment toward the frozen global best with probability c2 = 0.8.
+6. With probability 0.2, apply one random swap of two non-depot positions for exploration. Retain at most the latest 2n actual swaps as the next velocity.
+7. Evaluate the updated position and improve personal best if its cost decreased. After all particles, update the global best and record its cost.
+8. Stop after 120 updates and return the best observed tour. There is no early stopping or exact-solver information injected into PSO.
 
-### 3.2 Vertex Specifications Table
+c1 and c2 are probabilities in [0,1], not continuous-PSO acceleration constants. Invalid values such as 1.5 are rejected. Computing and applying alignment swaps sequentially avoids stale-index cancellation. A local random generator makes seeds repeatable without changing Python's global random state. Every final updated population is evaluated.
 
-| Node ID | Landmark Name | Classification | Latitude (°N) | Longitude (°E) | Description / Role |
-|:---:|:---|:---|:---:|:---:|:---|
-| **$V_0$** | **Plaza Divisoria** | **Central Depot** | 8.47775 | 124.64378 | Golden Friendship Park / Courier Hub (Start & End) |
-| **$V_1$** | **Ayala Malls Centrio** | Commercial | 8.48510 | 124.65120 | Major retail destination along C.M. Recto Ave |
-| **$V_2$** | **SM CDO Downtown Premier** | Commercial | 8.48440 | 124.65430 | High-volume shopping center, C.M. Recto & Osmeña |
-| **$V_3$** | **Limketkai Center** | Commercial | 8.48160 | 124.65390 | Comprehensive business and retail complex in Lapasan |
-| **$V_4$** | **Carmen Commercial Center** | Commercial / Market | 8.48090 | 124.63550 | West bank market center along Vamenta Blvd |
-| **$V_5$** | **Bulua Westbound Terminal** | Transit & Logistics | 8.50430 | 124.61590 | Integrated provincial transit and freight terminal |
-| **$V_6$** | **Port of CDO (Macabalan)** | Maritime Logistics | 8.49390 | 124.66230 | Primary international container and passenger seaport |
-| **$V_7$** | **SM City CDO Uptown** | Commercial | 8.45410 | 124.62300 | Pueblo de Oro township commercial anchor |
+### Complexity and limitations
 
-### 3.3 Google Maps Driving Distance Matrix ($D \in \mathbb{R}^{8 \times 8}$)
-All distances represent measured road kilometers via Google Maps driving navigation:
+For n locations, P particles and T updates, the bounded velocity and maintained index map give expected **O(Pn + TPn)** time and **O(Pn)** swarm memory, in addition to the O(n²) input matrix. If P and T are both chosen proportional to n, this implementation's expected time becomes O(n³). That is a conditional scaling statement, not a universal PSO bound or a proof of fast exact optimization.
 
-| From / To | $V_0$ (Divisoria) | $V_1$ (Centrio) | $V_2$ (SM DT) | $V_3$ (Limketkai) | $V_4$ (Carmen) | $V_5$ (Bulua) | $V_6$ (Port) | $V_7$ (SM Up) |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **$V_0$** | **0.0** | 1.2 | 1.6 | 1.8 | 1.3 | 5.2 | 3.8 | 6.5 |
-| **$V_1$** | 1.2 | **0.0** | 0.4 | 1.1 | 2.4 | 5.6 | 3.1 | 7.2 |
-| **$V_2$** | 1.6 | 0.4 | **0.0** | 0.8 | 2.6 | 6.0 | 2.7 | 7.5 |
-| **$V_3$** | 1.8 | 1.1 | 0.8 | **0.0** | 2.8 | 6.5 | 3.3 | 7.8 |
-| **$V_4$** | 1.3 | 2.4 | 2.6 | 2.8 | **0.0** | 4.5 | 4.6 | 5.8 |
-| **$V_5$** | 5.2 | 5.6 | 6.0 | 6.5 | 4.5 | **0.0** | 6.8 | 9.2 |
-| **$V_6$** | 3.8 | 3.1 | 2.7 | 3.3 | 4.6 | 6.8 | **0.0** | 9.8 |
-| **$V_7$** | 6.5 | 7.2 | 7.5 | 7.8 | 5.8 | 9.2 | 9.8 | **0.0** |
+PSO has no general optimality guarantee and may stagnate. The exact solver checks (n−1)! orders and computes n edges per order: O(n × (n−1)!) time. For this eight-node problem that is 5,040 tours. The PSO demonstration evaluates 40 × 121 = 4,840 candidates, including possible repeats. This small example does not establish a speed or scalability advantage.
 
-*Data Source Identification:* Driving distances were retrieved directly from Google Maps road network routing between exact geographic coordinates in Cagayan de Oro City.
+## 5. Implemented comparisons and measured results
 
----
+The repository implements discrete PSO, exact brute force, and nearest neighbor. There is no genetic algorithm. The notebook imports the same functions and CSVs as the command-line script.
 
-## 4. Python Implementation and Verification
+| Method | Tour length (km) | Evidence |
+|---|---:|---|
+| Brute force | 35.9537 | All 5,040 depot-fixed orders evaluated |
+| Nearest neighbor | 38.4993 | Deterministic greedy baseline from V0 |
+| Discrete PSO, seed 123 | 36.4739 | 40 particles, 120 updates; 1.4469% gap |
 
-### 4.1 Python Code Architecture
-The implementation in `cdo_tsp_pso_solver.py` directly models Algorithm 2.4 and Appendix 4.4 of Luna-Garcia et al. (2024).
+The seeded PSO tour **is an approximate solution for the stored matrix**. Its gap is **1.4469%**, or **520.2 metres** above the exact result. This demonstration run did not reach the exact optimum within 120 updates. Initial swarm best: **37.2907 km**.
 
-```python
-# Core Algorithm Architecture in cdo_tsp_pso_solver.py
-class Particle:
-    def __init__(self, num_cities):
-        self.position = random.sample(range(num_cities), num_cities)
-        self.velocity = []
-        self.best_position = list(self.position)
-        self.best_cost = float('inf')
-        self.current_cost = float('inf')
+- PSO order: **V0 → V3 → V4 → V7 → V6 → V5 → V2 → V1 → V0**.
+- Exact benchmark order: **V0 → V3 → V1 → V2 → V5 → V6 → V7 → V4 → V0**.
+- Seeded PSO compute time: 0.033730 s.
+- Brute-force compute time: 0.009743 s.
 
-def pso_tsp(matrix, num_particles=40, max_iterations=120, w=0.5, c1=1.5, c2=1.5, seed=42):
-    # Initializes swarm, evaluates fitness, constructs swap operators, updates positions
-    ...
+Times are one local run under Python 3.13.13; they exclude downloads, plots and repeated-seed experiments and will vary by machine/run. Raw outcomes and input hashes are recorded in `results/summary.json`.
+
+### Repeated seeds
+
+Across seeds 0–29, **4 of 30** runs matched the exact matrix optimum. Mean distance: **36.6298 km**; range: **35.9537–38.4476 km**. All runs use the same parameters and matrix. This measures seed variation for one selected instance, not performance across cities or larger graphs. The demonstration seed 123 is separate from these 30 runs.
+
+![Seeded PSO convergence](results/figure2_pso_convergence.png)
+
+## 6. Closed-tour verification
+
+| Leg | From | To | Distance (km) |
+|---|---|---|---:|
+| 1 | V0 | V3 | 0.3565 |
+| 2 | V3 | V4 | 1.3014 |
+| 3 | V4 | V7 | 8.7112 |
+| 4 | V7 | V6 | 13.5305 |
+| 5 | V6 | V5 | 7.3656 |
+| 6 | V5 | V2 | 4.6876 |
+| 7 | V2 | V1 | 0.1585 |
+| 8 | V1 | V0 | 0.3626 |
+| Total | | | **36.4739** |
+
+The implementation checks that every node occurs exactly once, V0 is first, and the implicit final leg returns to V0. The audited leg sum equals the reported PSO cost. Reversing the order is not assumed equivalent because the input is asymmetric.
+
+![PSO tour on saved road geometry](results/figure3_cdo_tour.png)
+
+The road plot uses the saved geometry for each actual directed leg. It does not draw straight-line edges and label them as road routes. Its title uses the PSO cost and a conditional optimality statement. The route order can be used to discuss tourist-stop sequencing; it does not establish parking legality, entrance access or a feasible schedule of visits.
+
+## 7. Verification and reproducible commands
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 scripts/build_dataset.py
+python3 cdo_tsp_pso_solver.py
+python3 scripts/update_documents.py
+python3 -m unittest discover -s tests -v
 ```
 
-### 4.2 Benchmark Validation: Exact Brute Force Search
-To satisfy the rubric requirement (*"State whether the route is proven optimal or is an approximate solution. Do not claim optimality without supporting evidence"*), an exact Brute Force search ($\mathcal{O}(n!)$) was implemented alongside PSO.
+Source-to-CSV reconstruction must reproduce identical files. Tests also cover directed return-leg costs, independent exact enumeration, valid sequential swaps, final-update evaluation, valid tours, reproducible seeds, invalid parameters, missing/duplicate CSV pairs, and loaded CSV changes. The notebook performs a temporary data rebuild before executing the shared experiment.
 
-For $n=8$ locations, the number of distinct permutations starting at $V_0$ is:
-$$(n-1)! = 7! = 5,040 \text{ tours}$$
-The Brute Force benchmark exhaustively evaluated all 5,040 candidate tours in under 0.01 seconds and established the true global minimum:
-$$\text{Global Optimal Distance} = \mathbf{28.80\text{ km}}$$
+The original delivery dataset, solver, report, notebook and images remain in `archive/delivery-example-c44f835.zip`. They describe a separate historical scenario and are not evidence for these tourist results.
 
-### 4.3 PSO Swarm Convergence Tracking
-Executing PSO with a swarm size of $P = 40$ particles and $T = 120$ iterations produced the following convergence progression:
+## 8. References
 
-| Iteration | Global Best Distance ($gbest$) | Current Best Tour Sequence |
-|:---:|:---:|:---|
-| **1** | 31.00 km | $V_0 \to V_3 \to V_1 \to V_6 \to V_2 \to V_5 \to V_7 \to V_4 \to V_0$ |
-| **21** | 29.10 km | $V_0 \to V_3 \to V_1 \to V_2 \to V_6 \to V_5 \to V_7 \to V_4 \to V_0$ |
-| **41** | **28.80 km** | $V_0 \to V_4 \to V_7 \to V_5 \to V_6 \to V_3 \to V_2 \to V_1 \to V_0$ |
-| **61** | **28.80 km** | $V_0 \to V_4 \to V_7 \to V_5 \to V_6 \to V_3 \to V_2 \to V_1 \to V_0$ |
-| **81** | **28.80 km** | $V_0 \to V_4 \to V_7 \to V_5 \to V_6 \to V_3 \to V_2 \to V_1 \to V_0$ |
-| **101** | **28.80 km** | $V_0 \to V_4 \to V_7 \to V_5 \to V_6 \to V_3 \to V_2 \to V_1 \to V_0$ |
-| **120** | **28.80 km** | $V_0 \to V_4 \to V_7 \to V_5 \to V_6 \to V_3 \to V_2 \to V_1 \to V_0$ |
-
-**Optimality Finding:** By iteration 41, the swarm converged to **28.80 km**, achieving a 0.00% optimality gap against the exact Brute Force benchmark.
-
-### 4.4 Step-by-Step Closed Tour Audit and Recalculation
-To verify mathematical correctness, each individual leg of the optimal closed tour is audited directly against the Google Maps distance matrix:
-
-$$\text{Optimal Tour: } V_0 \to V_4 \to V_7 \to V_5 \to V_6 \to V_3 \to V_2 \to V_1 \to V_0$$
-
-| Leg # | Origin Node ($u$) | Destination Node ($v$) | Road Distance ($D[u][v]$) | Navigated Corridor / Bridges in CDO |
-|:---:|:---|:---|:---:|:---|
-| **1** | $V_0$: Plaza Divisoria | $V_4$: Carmen Commercial Center | **1.30 km** | Ysalina / Carmen Bridge crossing Cagayan River |
-| **2** | $V_4$: Carmen Commercial Center | $V_7$: SM City CDO Uptown | **5.80 km** | Masterson Avenue ascent to Pueblo de Oro plateau |
-| **3** | $V_7$: SM City CDO Uptown | $V_5$: Bulua Westbound Terminal | **9.20 km** | Masterson Ave $\to$ Carmen $\to$ BCIR National Highway |
-| **4** | $V_5$: Bulua Westbound Terminal | $V_6$: Port of CDO (Macabalan) | **6.80 km** | CDO Coastal Bypass Road $\to$ Julio Pacana St |
-| **5** | $V_6$: Port of CDO (Macabalan) | $V_3$: Limketkai Center | **3.30 km** | Corrales Extension $\to$ Limketkai Drive |
-| **6** | $V_3$: Limketkai Center | $V_2$: SM CDO Downtown Premier | **0.80 km** | Claro M. Recto Avenue corridor |
-| **7** | $V_2$: SM CDO Downtown Premier | $V_1$: Ayala Malls Centrio | **0.40 km** | Claro M. Recto commercial strip |
-| **8** | $V_1$: Ayala Malls Centrio | $V_0$: Plaza Divisoria | **1.20 km** | Don Apolinar Velez St descent back to Central Depot |
-| **Total** | **All 8 Nodes Visited** | **Complete Closed Loop** | **28.80 km** | **Independent Sum Matches Code Output Exactly** |
-
-```
-Verification Checklist:
-[✓] Vertex Count: Exactly 8 distinct nodes in tour sequence
-[✓] Hamiltonian Property: Every client node visited exactly once
-[✓] Closed Cycle: Tour departs from V0 and returns to V0
-[✓] Sum Check: 1.30 + 5.80 + 9.20 + 6.80 + 3.30 + 0.80 + 0.40 + 1.20 = 28.80 km
-```
-
----
-
-## 5. Solution, Logistical Interpretation, and Conclusion
-
-### 5.1 Geographic and Logistical Route Interpretation
-The generated delivery sequence exhibits clear geographic and operational logic that reflects Cagayan de Oro's physical terrain:
-1. **West Bank and Uptown Elevation Phase ($V_0 \to V_4 \to V_7$):** The courier departs Divisoria ($V_0$) early in the tour across Ysalina Bridge to Carmen ($V_4$), then proceeds up Masterson Avenue to deliver to SM Uptown ($V_7$).
-2. **Transit and Port Arterial Phase ($V_7 \to V_5 \to V_6$):** Descending from Uptown toward the western transit corridor, the van services Bulua Terminal ($V_5$). It then utilizes the Coastal Bypass Road directly to the Macabalan Seaport ($V_6$).
-3. **Downtown Commercial Aggregation Phase ($V_6 \to V_3 \to V_2 \to V_1 \to V_0$):** After serving Macabalan, the van enters the compact downtown retail cluster, visiting Limketkai ($V_3$), SM Downtown ($V_2$), and Ayala Centrio ($V_1$) in immediate succession with minimal leg distances (0.8 km and 0.4 km), before returning to Plaza Divisoria ($V_0$).
-
-This perimeter-sweeping strategy prevents redundant river crossings and downtown traffic bottlenecks, saving significant driving distance compared to unoptimized schedules (which typically exceed 45–55 km).
-
-### 5.2 Optimality Claim and Theoretical Justification
-- **Theoretical Characterization:** In the general case, Particle Swarm Optimization is a **metaheuristic / approximate algorithm**. It explores the permutation space through stochastic search and does not mathematically guarantee finding the global optimum for arbitrary graphs.
-- **Empirical Proof for this Problem Instance:** On this specific 8-location Cagayan de Oro instance, the PSO solution was benchmarked against the exhaustive Brute Force algorithm ($5,040$ permutations). The result confirms that the PSO tour of **28.80 km** is the **exact, proven global optimum**.
-
-### 5.3 Practical Limitations and Future Improvements
-1. **Dynamic Congestion and Time Windows:** The current model evaluates static road distances. In reality, congestion along Carmen Bridge and C.M. Recto Avenue during peak hours (7:30–9:00 AM and 5:00–7:00 PM) varies significantly. Incorporating time-dependent edge weights or minimizing travel duration would improve peak-hour accuracy.
-2. **Asymmetric Street Networks:** Real-world downtown streets often feature one-way regulations. An asymmetric distance matrix ($D[u][v] \neq D[v][u]$) can be directly accommodated by the same PSO solver.
-3. **Hybrid Metaheuristics (PSO + 2-Opt):** In larger city instances ($n \ge 50$), standard discrete PSO can occasionally become trapped in local minima. Integrating a 2-Opt local search operator into the position update step accelerates fine-tuning of crossing edges.
-
----
-
-## 6. References
-
-1. Luna-Garcia, R., Candano, T. M. C., & Caga-anan, R. L. (2024). Performance Analysis of Classical Algorithms for the Traveling Salesman Problem. *The Mindanawan Journal of Mathematics (TMJM)*, 6(2), 79–111. https://doi.org/10.62071/tmjm.v6i2.716
-2. Kennedy, J., & Eberhart, R. (1995). Particle swarm optimization. In *Proceedings of ICNN'95 - International Conference on Neural Networks* (Vol. 4, pp. 1942–1948). IEEE. https://doi.org/10.1109/ICNN.1995.488968
-3. Lian, X., Wang, Y., & Shao, Y. (2004). Particle swarm optimization for traveling salesman problem. In *Proceedings of the 2004 International Conference on Machine Learning and Cybernetics* (Vol. 7, pp. 3972–3975). IEEE. https://doi.org/10.1109/ICMLC.2004.1382228
-4. Shi, Y., Teng, H., & Li, Z. (2010). An improved particle swarm optimization algorithm for traveling salesman problem. In *Proceedings of the 2010 International Conference on Machine Learning and Cybernetics* (pp. 582–587). IEEE. https://doi.org/10.1109/ICMLC.2010.5583011
-5. Applegate, D. L., Bixby, R. E., Chvátal, V., & Cook, W. J. (2007). *The Traveling Salesman Problem: A Computational Study*. Princeton University Press.
-6. Google Maps Platform. (2024). *Distance Matrix API and Directions Routing*. Alphabet Inc.
+1. LakbayPinas (2025). [19 Must-Visit Cagayan de Oro Tourist Spots](https://lakbaypinas.com/19-must-visit-cagayan-de-oro-tourist-spots-travel/). Destination-selection source only.
+2. [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Public geographic database; exact object references in the locations CSV.
+3. [OSRM API documentation](https://project-osrm.org/docs/v5.24.0/api/). Driving table and route semantics; raw responses retained locally.
+4. Luna-Garcia, R., Candano, T. M. C., and Caga-anan, R. L. (2024). [Performance Analysis of Classical Algorithms for the Traveling Salesman Problem](https://doi.org/10.62071/tmjm.v6i2.716). The Mindanawan Journal of Mathematics, 6(2), 79–111. Assigned PSO reference; implementation adaptations are stated in Section 4.

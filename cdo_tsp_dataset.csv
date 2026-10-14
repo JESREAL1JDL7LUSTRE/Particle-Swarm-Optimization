@@ -1,77 +1,65 @@
-# Location Metadata: Cagayan de Oro City TSP (8 Commercial & Logistics Hubs)
-Node_ID,Location_Name,Type,Latitude,Longitude,Description
-V0,Plaza Divisoria,Depot / Central Hub,8.47775,124.64378,"Golden Friendship Park / Central Courier Hub (Starting & Finishing Point)"
-V1,Ayala Malls Centrio,Commercial Hub,8.48510,124.65120,"Major retail center along Claro M. Recto Ave"
-V2,SM CDO Downtown Premier,Commercial Hub,8.48440,124.65430,"Premier shopping and logistics drop-off along C.M. Recto & Osmeña St"
-V3,Limketkai Center,Commercial Hub,8.48160,124.65390,"Central business and retail complex in Lapasan"
-V4,Carmen Commercial Center,Market / Commercial,8.48090,124.63550,"Vamenta Blvd commercial and market district across Cagayan River"
-V5,Bulua Westbound Terminal,Logistics & Transit,8.50430,124.61590,"Integrated provincial bus and freight transit terminal in Bulua"
-V6,Port of Cagayan de Oro (Macabalan),Maritime Logistics,8.49390,124.66230,"Principal international and inter-island shipping seaport in Macabalan"
-V7,SM City CDO Uptown,Commercial Hub,8.45410,124.62300,"Uptown commercial center in Pueblo de Oro Township (Upper Carmen)"
-
-# Pairwise Google Maps Road Driving Distance Matrix (in Kilometers)
-From_Node,To_Node,From_Name,To_Name,Distance_km
-V0,V0,Plaza Divisoria,Plaza Divisoria,0.0
-V0,V1,Plaza Divisoria,Ayala Malls Centrio,1.2
-V0,V2,Plaza Divisoria,SM CDO Downtown Premier,1.6
-V0,V3,Plaza Divisoria,Limketkai Center,1.8
-V0,V4,Plaza Divisoria,Carmen Commercial Center,1.3
-V0,V5,Plaza Divisoria,Bulua Westbound Terminal,5.2
-V0,V6,Plaza Divisoria,Port of CDO (Macabalan),3.8
-V0,V7,Plaza Divisoria,SM City CDO Uptown,6.5
-V1,V0,Ayala Malls Centrio,Plaza Divisoria,1.2
-V1,V1,Ayala Malls Centrio,Ayala Malls Centrio,0.0
-V1,V2,Ayala Malls Centrio,SM CDO Downtown Premier,0.4
-V1,V3,Ayala Malls Centrio,Limketkai Center,1.1
-V1,V4,Ayala Malls Centrio,Carmen Commercial Center,2.4
-V1,V5,Ayala Malls Centrio,Bulua Westbound Terminal,5.6
-V1,V6,Ayala Malls Centrio,Port of CDO (Macabalan),3.1
-V1,V7,Ayala Malls Centrio,SM City CDO Uptown,7.2
-V2,V0,SM CDO Downtown Premier,Plaza Divisoria,1.6
-V2,V1,SM CDO Downtown Premier,Ayala Malls Centrio,0.4
-V2,V2,SM CDO Downtown Premier,SM CDO Downtown Premier,0.0
-V2,V3,SM CDO Downtown Premier,Limketkai Center,0.8
-V2,V4,SM CDO Downtown Premier,Carmen Commercial Center,2.6
-V2,V5,SM CDO Downtown Premier,Bulua Westbound Terminal,6.0
-V2,V6,SM CDO Downtown Premier,Port of CDO (Macabalan),2.7
-V2,V7,SM CDO Downtown Premier,SM City CDO Uptown,7.5
-V3,V0,Limketkai Center,Plaza Divisoria,1.8
-V3,V1,Limketkai Center,Ayala Malls Centrio,1.1
-V3,V2,Limketkai Center,SM CDO Downtown Premier,0.8
-V3,V3,Limketkai Center,Limketkai Center,0.0
-V3,V4,Limketkai Center,Carmen Commercial Center,2.8
-V3,V5,Limketkai Center,Bulua Westbound Terminal,6.5
-V3,V6,Limketkai Center,Port of CDO (Macabalan),3.3
-V3,V7,Limketkai Center,SM City CDO Uptown,7.8
-V4,V0,Carmen Commercial Center,Plaza Divisoria,1.3
-V4,V1,Carmen Commercial Center,Ayala Malls Centrio,2.4
-V4,V2,Carmen Commercial Center,SM CDO Downtown Premier,2.6
-V4,V3,Carmen Commercial Center,Limketkai Center,2.8
-V4,V4,Carmen Commercial Center,Carmen Commercial Center,0.0
-V4,V5,Carmen Commercial Center,Bulua Westbound Terminal,4.5
-V4,V6,Carmen Commercial Center,Port of CDO (Macabalan),4.6
-V4,V7,Carmen Commercial Center,SM City CDO Uptown,5.8
-V5,V0,Bulua Westbound Terminal,Plaza Divisoria,5.2
-V5,V1,Bulua Westbound Terminal,Ayala Malls Centrio,5.6
-V5,V2,Bulua Westbound Terminal,SM CDO Downtown Premier,6.0
-V5,V3,Bulua Westbound Terminal,Limketkai Center,6.5
-V5,V4,Bulua Westbound Terminal,Carmen Commercial Center,4.5
-V5,V5,Bulua Westbound Terminal,Bulua Westbound Terminal,0.0
-V5,V6,Bulua Westbound Terminal,Port of CDO (Macabalan),6.8
-V5,V7,Bulua Westbound Terminal,SM City CDO Uptown,9.2
-V6,V0,Port of CDO (Macabalan),Plaza Divisoria,3.8
-V6,V1,Port of CDO (Macabalan),Ayala Malls Centrio,3.1
-V6,V2,Port of CDO (Macabalan),SM CDO Downtown Premier,2.7
-V6,V3,Port of CDO (Macabalan),Limketkai Center,3.3
-V6,V4,Port of CDO (Macabalan),Carmen Commercial Center,4.6
-V6,V5,Port of CDO (Macabalan),Bulua Westbound Terminal,6.8
-V6,V6,Port of CDO (Macabalan),Port of CDO (Macabalan),0.0
-V6,V7,Port of CDO (Macabalan),SM City CDO Uptown,9.8
-V7,V0,SM City CDO Uptown,Plaza Divisoria,6.5
-V7,V1,SM City CDO Uptown,Ayala Malls Centrio,7.2
-V7,V2,SM City CDO Uptown,SM CDO Downtown Premier,7.5
-V7,V3,SM City CDO Uptown,Limketkai Center,7.8
-V7,V4,SM City CDO Uptown,Carmen Commercial Center,5.8
-V7,V5,SM City CDO Uptown,Bulua Westbound Terminal,9.2
-V7,V6,SM City CDO Uptown,Port of CDO (Macabalan),9.8
-V7,V7,SM City CDO Uptown,SM City CDO Uptown,0.0
+From_Node,To_Node,Distance_m,Duration_s,Source
+V0,V0,0.0,0.0,OSRM driving table; data/raw/osrm_table.json
+V0,V1,633.5,101.3,OSRM driving table; data/raw/osrm_table.json
+V0,V2,744.0,113.1,OSRM driving table; data/raw/osrm_table.json
+V0,V3,356.5,57.4,OSRM driving table; data/raw/osrm_table.json
+V0,V4,1447.7,186.8,OSRM driving table; data/raw/osrm_table.json
+V0,V5,4492.7,703.1,OSRM driving table; data/raw/osrm_table.json
+V0,V6,8798.6,1252.3,OSRM driving table; data/raw/osrm_table.json
+V0,V7,9705.5,1028.3,OSRM driving table; data/raw/osrm_table.json
+V1,V0,362.6,61.7,OSRM driving table; data/raw/osrm_table.json
+V1,V1,0.0,0.0,OSRM driving table; data/raw/osrm_table.json
+V1,V2,132.7,19.9,OSRM driving table; data/raw/osrm_table.json
+V1,V3,519.0,88.6,OSRM driving table; data/raw/osrm_table.json
+V1,V4,1368.3,180.5,OSRM driving table; data/raw/osrm_table.json
+V1,V5,4381.0,691.6,OSRM driving table; data/raw/osrm_table.json
+V1,V6,8686.9,1240.8,OSRM driving table; data/raw/osrm_table.json
+V1,V7,10079.5,1042.5,OSRM driving table; data/raw/osrm_table.json
+V2,V0,495.7,73.8,OSRM driving table; data/raw/osrm_table.json
+V2,V1,158.5,29.4,OSRM driving table; data/raw/osrm_table.json
+V2,V2,0.0,0.0,OSRM driving table; data/raw/osrm_table.json
+V2,V3,556.2,88.6,OSRM driving table; data/raw/osrm_table.json
+V2,V4,1510.1,201.9,OSRM driving table; data/raw/osrm_table.json
+V2,V5,4390.5,694.0,OSRM driving table; data/raw/osrm_table.json
+V2,V6,8696.4,1243.2,OSRM driving table; data/raw/osrm_table.json
+V2,V7,10221.3,1063.9,OSRM driving table; data/raw/osrm_table.json
+V3,V0,491.5,78.9,OSRM driving table; data/raw/osrm_table.json
+V3,V1,473.4,78.6,OSRM driving table; data/raw/osrm_table.json
+V3,V2,583.9,98.4,OSRM driving table; data/raw/osrm_table.json
+V3,V3,0.0,0.0,OSRM driving table; data/raw/osrm_table.json
+V3,V4,1301.4,166.6,OSRM driving table; data/raw/osrm_table.json
+V3,V5,4332.6,688.4,OSRM driving table; data/raw/osrm_table.json
+V3,V6,8638.4,1237.6,OSRM driving table; data/raw/osrm_table.json
+V3,V7,9559.1,1008.1,OSRM driving table; data/raw/osrm_table.json
+V4,V0,1205.3,157.7,OSRM driving table; data/raw/osrm_table.json
+V4,V1,1366.7,174.8,OSRM driving table; data/raw/osrm_table.json
+V4,V2,1499.5,194.7,OSRM driving table; data/raw/osrm_table.json
+V4,V3,1285.6,178.6,OSRM driving table; data/raw/osrm_table.json
+V4,V4,0.0,0.0,OSRM driving table; data/raw/osrm_table.json
+V4,V5,5426.1,820.3,OSRM driving table; data/raw/osrm_table.json
+V4,V6,9732.0,1369.5,OSRM driving table; data/raw/osrm_table.json
+V4,V7,8711.2,862.0,OSRM driving table; data/raw/osrm_table.json
+V5,V0,4887.4,768.1,OSRM driving table; data/raw/osrm_table.json
+V5,V1,4650.4,730.5,OSRM driving table; data/raw/osrm_table.json
+V5,V2,4687.6,733.8,OSRM driving table; data/raw/osrm_table.json
+V5,V3,4602.0,717.8,OSRM driving table; data/raw/osrm_table.json
+V5,V4,5723.8,859.9,OSRM driving table; data/raw/osrm_table.json
+V5,V5,0.0,0.0,OSRM driving table; data/raw/osrm_table.json
+V5,V6,7024.2,1001.6,OSRM driving table; data/raw/osrm_table.json
+V5,V7,14005.7,1689.2,OSRM driving table; data/raw/osrm_table.json
+V6,V0,9044.9,1310.6,OSRM driving table; data/raw/osrm_table.json
+V6,V1,8807.9,1273.0,OSRM driving table; data/raw/osrm_table.json
+V6,V2,8845.1,1276.3,OSRM driving table; data/raw/osrm_table.json
+V6,V3,8759.5,1260.3,OSRM driving table; data/raw/osrm_table.json
+V6,V4,9881.3,1402.4,OSRM driving table; data/raw/osrm_table.json
+V6,V5,7365.6,1057.5,OSRM driving table; data/raw/osrm_table.json
+V6,V6,0.0,0.0,OSRM driving table; data/raw/osrm_table.json
+V6,V7,13652.7,1795.8,OSRM driving table; data/raw/osrm_table.json
+V7,V0,9923.6,1021.8,OSRM driving table; data/raw/osrm_table.json
+V7,V1,10085.1,1038.9,OSRM driving table; data/raw/osrm_table.json
+V7,V2,10217.8,1058.8,OSRM driving table; data/raw/osrm_table.json
+V7,V3,10003.9,1042.7,OSRM driving table; data/raw/osrm_table.json
+V7,V4,8718.4,864.1,OSRM driving table; data/raw/osrm_table.json
+V7,V5,13725.6,1679.8,OSRM driving table; data/raw/osrm_table.json
+V7,V6,13530.5,1800.9,OSRM driving table; data/raw/osrm_table.json
+V7,V7,0.0,0.0,OSRM driving table; data/raw/osrm_table.json

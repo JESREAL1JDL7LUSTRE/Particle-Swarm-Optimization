@@ -1,0 +1,69 @@
+{
+  "problem": "Eight-stop CDO tourist driving tour",
+  "objective": "Minimize the sum of stored OSRM recommended driving-route distances",
+  "input_sha256": {
+    "cdo_tsp_dataset.csv": "0dd9e7cae1ef0acee284aaba8094bf437d7f64a9878a0c37d9fa210ed9600a76",
+    "cdo_tsp_locations.csv": "647c01c579f6967eb011c271bfcc8be305d1e75177ffcfb9736d87ab96aa5f7a"
+  },
+  "python_version": "3.13.13",
+  "parameters": {
+    "num_particles": 40,
+    "max_iterations": 120,
+    "w": 0.5,
+    "c1": 0.8,
+    "c2": 0.8,
+    "mutation": 0.2,
+    "seed": 123
+  },
+  "pso_tour": [
+    0,
+    3,
+    4,
+    7,
+    6,
+    5,
+    2,
+    1
+  ],
+  "pso_distance_m": 36473.9,
+  "exact_tour": [
+    0,
+    3,
+    1,
+    2,
+    5,
+    6,
+    7,
+    4
+  ],
+  "exact_distance_m": 35953.7,
+  "exact_tours_evaluated": 5040,
+  "nearest_neighbor_tour": [
+    0,
+    3,
+    1,
+    2,
+    4,
+    5,
+    6,
+    7
+  ],
+  "nearest_neighbor_distance_m": 38499.3,
+  "optimality_gap_percent": 1.4468608237816971,
+  "matches_exact": false,
+  "first_optimum_iteration": null,
+  "initial_best_m": 37290.7,
+  "pso_seconds": 0.033729623071849346,
+  "brute_force_seconds": 0.009743160917423666,
+  "repeated_runs": {
+    "count": 30,
+    "seed_range": [
+      0,
+      29
+    ],
+    "optimal_count": 4,
+    "mean_distance_m": 36629.793333333335,
+    "min_distance_m": 35953.7,
+    "max_distance_m": 38447.6
+  }
+}

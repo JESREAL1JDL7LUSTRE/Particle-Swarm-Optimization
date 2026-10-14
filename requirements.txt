@@ -1,0 +1,4 @@
+# Core solver and tests use only the Python standard library.
+matplotlib>=3.8,<4
+# Used only by the optional source-download command for a portable CA bundle.
+certifi>=2024.2.2

@@ -1,0 +1,329 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-10-14T03:58:17Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 4008499561,
+  "lat": 8.4625020,
+  "lon": 124.6478140,
+  "tags": {
+    "amenity": "restaurant",
+    "name": "High Ridge"
+  }
+},
+{
+  "type": "node",
+  "id": 10825921802,
+  "lat": 8.4758675,
+  "lon": 124.6459752,
+  "tags": {
+    "access": "permit",
+    "addr:street": "Corrales Avenue",
+    "name": "Museo de Oro",
+    "operator": "Xavier University - Ateneo de Cagayan",
+    "tourism": "museum"
+  }
+},
+{
+  "type": "way",
+  "id": 178102743,
+  "center": {
+    "lat": 8.4853122,
+    "lon": 124.6479715
+  },
+  "nodes": [
+    4522550590,
+    5206026910,
+    4522545453,
+    4522545451,
+    4522545470,
+    4522550590
+  ],
+  "tags": {
+    "leisure": "park",
+    "name": "Vicente De Lara Park"
+  }
+},
+{
+  "type": "way",
+  "id": 181548345,
+  "center": {
+    "lat": 8.4748621,
+    "lon": 124.6414698
+  },
+  "nodes": [
+    5082810795,
+    5082810798,
+    5082810794,
+    1919622800,
+    1919622791,
+    1919622805,
+    1919622790,
+    1919622796,
+    1919622797,
+    1919622794,
+    1919622793,
+    1919622795,
+    1919622798,
+    1919622799,
+    1919622804,
+    1919622801,
+    1919622792,
+    5082810795
+  ],
+  "tags": {
+    "addr:barangay": "Barangay 1",
+    "addr:city": "Cagayan de Oro City",
+    "addr:postcode": "9000",
+    "addr:province": "Misamis Oriental",
+    "addr:street": "Gaston Circle",
+    "alt_name": "Cagayan de Oro Cathedral",
+    "amenity": "place_of_worship",
+    "building": "cathedral",
+    "contact:facebook": "https://www.facebook.com/acdocathedral2019",
+    "denomination": "roman_catholic",
+    "name": "Saint Augustine Metropolitan Cathedral",
+    "name:etymology": "Augustine of Hippo",
+    "name:etymology:wikidata": "Q8018",
+    "name:etymology:wikipedia": "en:Augustine of Hippo",
+    "religion": "christian",
+    "short_name": "St. Augustine Metropolitan Cathedral",
+    "wikidata": "Q19894354",
+    "wikimedia_commons": "Category:Saint Augustine Metropolitan Cathedral (Cagayan de Oro)",
+    "wikipedia": "en:Saint Augustine Metropolitan Cathedral"
+  }
+},
+{
+  "type": "way",
+  "id": 573130154,
+  "center": {
+    "lat": 8.4580377,
+    "lon": 124.7000280
+  },
+  "nodes": [
+    5505422853,
+    5505422854,
+    5505422855,
+    5505422856,
+    5505422857,
+    5505422858,
+    5505422859,
+    5505422860,
+    5505422861,
+    5505422862,
+    5505422863,
+    5505422864,
+    5505422865,
+    5505422853
+  ],
+  "tags": {
+    "addr:city": "Cagayan de Oro City",
+    "addr:postcode": "9000",
+    "addr:province": "Misamis Oriental",
+    "landuse": "recreation_ground",
+    "name": "Gardens of Malasag Eco-Tourism Village",
+    "source": "local knowledge"
+  }
+},
+{
+  "type": "way",
+  "id": 581430595,
+  "center": {
+    "lat": 8.4754190,
+    "lon": 124.6421403
+  },
+  "nodes": [
+    5563261576,
+    5563261577,
+    5563261596,
+    5563261588,
+    5563261589,
+    5563261597,
+    5563261578,
+    5563261598,
+    5568020400,
+    5563261599,
+    5563261579,
+    5563272186,
+    5563261594,
+    5563272187,
+    5563261580,
+    5563261607,
+    5563261595,
+    5563261581,
+    5563261606,
+    5563261592,
+    5563261604,
+    5563261582,
+    5563261605,
+    5563261593,
+    5563261583,
+    5563261603,
+    5563261584,
+    5563261591,
+    5563261602,
+    5563261585,
+    5563261601,
+    5563261586,
+    5563261600,
+    5563261587,
+    5563261576
+  ],
+  "tags": {
+    "addr:city": "Cagayan de Oro",
+    "addr:postcode": "9000",
+    "addr:province": "Misamis Oriental",
+    "leisure": "park",
+    "name": "Gaston Park",
+    "name:etymology": "Segundo Gastón",
+    "name:etymology:wikidata": "Q7446401",
+    "wikidata": "Q127697973",
+    "wikimedia_commons": "Category:Gaston Park (Cagayan de Oro)"
+  }
+},
+{
+  "type": "way",
+  "id": 1228751782,
+  "center": {
+    "lat": 8.4230945,
+    "lon": 124.6572612
+  },
+  "nodes": [
+    11395178482,
+    11395178474,
+    11395178475,
+    11395178476,
+    11395178477,
+    11395178478,
+    11395178479,
+    11395178480,
+    11395178481,
+    11395178537,
+    11395178536,
+    11395178535,
+    11395178534,
+    11395178533,
+    11395178532,
+    11395178531,
+    11395178530,
+    11395178529,
+    11395178528,
+    11395178527,
+    11395178526,
+    11395178525,
+    11395178524,
+    11395178523,
+    11395178522,
+    11395178521,
+    11395178520,
+    11395178519,
+    11395178518,
+    11395178517,
+    11395178516,
+    11395178515,
+    11395178514,
+    11395178513,
+    11395178512,
+    11395178511,
+    11395178510,
+    11395178509,
+    11395178508,
+    11395178507,
+    11395178506,
+    11395178505,
+    11395178504,
+    11395178503,
+    11395178502,
+    11395178501,
+    11395178500,
+    11395178499,
+    11395178498,
+    11395178497,
+    11395178496,
+    11395178495,
+    11395178494,
+    11395178493,
+    11395178492,
+    11395178491,
+    11395178490,
+    11395178489,
+    11395178488,
+    11395178487,
+    11395178473,
+    11395178486,
+    11395178485,
+    6501186028,
+    11395178484,
+    11395178483,
+    11395178482
+  ],
+  "tags": {
+    "addr:barangay": "Indahag",
+    "addr:city": "Cagayan de Oro City",
+    "addr:place": "Sitio Santo Niño",
+    "addr:postcode": "9000",
+    "addr:province": "Misamis Oriental",
+    "contact:facebook": "https://www.facebook.com/amayaview",
+    "contact:instagram": "https://www.instagram.com/amayaviewph/",
+    "landuse": "commercial",
+    "name": "Amaya View",
+    "old_name": "Sierra Del Oro",
+    "opening_hours": "Mo-Su 07:00-20:00",
+    "tourism": "attraction"
+  }
+},
+{
+  "type": "relation",
+  "id": 13841686,
+  "center": {
+    "lat": 8.4777014,
+    "lon": 124.6438021
+  },
+  "members": [
+    {
+      "type": "way",
+      "ref": 1034364563,
+      "role": "outer"
+    },
+    {
+      "type": "way",
+      "ref": 184191689,
+      "role": "outer"
+    },
+    {
+      "type": "way",
+      "ref": 1034364562,
+      "role": "outer"
+    },
+    {
+      "type": "way",
+      "ref": 1034364565,
+      "role": "outer"
+    },
+    {
+      "type": "way",
+      "ref": 1034364564,
+      "role": "outer"
+    },
+    {
+      "type": "way",
+      "ref": 1034364566,
+      "role": "outer"
+    }
+  ],
+  "tags": {
+    "leisure": "park",
+    "name": "Divisoria Plaza",
+    "official_name": "Golden Friendship Park",
+    "type": "multipolygon"
+  }
+}
+
+  ]
+}

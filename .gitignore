@@ -7,3 +7,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .ipynb_checkpoints/
+
+# Disposable notebook reruns and local environments
+results/notebook_run/
+.venv/

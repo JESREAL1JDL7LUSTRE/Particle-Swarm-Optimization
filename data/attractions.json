@@ -1,0 +1,84 @@
+[
+  {
+    "code": "V0",
+    "name": "Plaza Divisoria",
+    "osm_type": "relation",
+    "osm_id": 13841686,
+    "request_lat": 8.4777014,
+    "request_lon": 124.6438021,
+    "article_section": "4.3",
+    "access_note": "Meeting point on R. N. Abejuela Street; plaza walking excluded."
+  },
+  {
+    "code": "V1",
+    "name": "Gaston Park",
+    "osm_type": "way",
+    "osm_id": 581430595,
+    "request_lat": 8.475419,
+    "request_lon": 124.6421403,
+    "article_section": "4.2",
+    "access_note": "Nearby car-network point; walking into the park excluded."
+  },
+  {
+    "code": "V2",
+    "name": "St. Augustine Metropolitan Cathedral",
+    "osm_type": "way",
+    "osm_id": 181548345,
+    "request_lat": 8.4750856,
+    "request_lon": 124.6417411,
+    "article_section": "4.4",
+    "access_note": "Designated road node 1911435359 on Gaston Circle; worship-site access not assumed.",
+    "access_osm_node": 1911435359
+  },
+  {
+    "code": "V3",
+    "name": "Museo de Oro",
+    "osm_type": "node",
+    "osm_id": 10825921802,
+    "request_lat": 8.4760436,
+    "request_lon": 124.6457732,
+    "article_section": "4.1",
+    "access_note": "Designated road node 7655144218 on Corrales Avenue outside the campus; museum/campus permission and walking excluded.",
+    "access_osm_node": 7655144218
+  },
+  {
+    "code": "V4",
+    "name": "Vicente de Lara Park",
+    "osm_type": "way",
+    "osm_id": 178102743,
+    "request_lat": 8.4853122,
+    "request_lon": 124.6479715,
+    "article_section": "5.3",
+    "access_note": "Nearby car-network point on Don Apolinar Velez Street; park walking excluded."
+  },
+  {
+    "code": "V5",
+    "name": "High Ridge",
+    "osm_type": "node",
+    "osm_id": 4008499561,
+    "request_lat": 8.462502,
+    "request_lon": 124.647814,
+    "article_section": "5.1",
+    "access_note": "OSRM road point near mapped restaurant; visitor access and parking assumed."
+  },
+  {
+    "code": "V6",
+    "name": "Amaya View",
+    "osm_type": "way",
+    "osm_id": 1228751782,
+    "request_lat": 8.4230945,
+    "request_lon": 124.6572612,
+    "article_section": "5.2",
+    "access_note": "OSRM road point near mapped attraction centre; visitor access and parking assumed."
+  },
+  {
+    "code": "V7",
+    "name": "Gardens of Malasag Eco-Tourism Village",
+    "osm_type": "way",
+    "osm_id": 573130154,
+    "request_lat": 8.4580377,
+    "request_lon": 124.700028,
+    "article_section": "3.3",
+    "access_note": "OSRM road point near mapped recreation grounds; visitor access and parking assumed."
+  }
+]

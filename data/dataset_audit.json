@@ -1,0 +1,14 @@
+{
+  "locations": 8,
+  "ordered_pairs_including_diagonal": 64,
+  "independently_requested_routes": 56,
+  "max_route_table_difference_m": 0.0,
+  "max_snap_distance_m": 49.244,
+  "osm_base_timestamp": "2026-10-14T03:58:17Z",
+  "acquired_from_utc": "2026-10-14T03:59:57.102255+00:00",
+  "acquired_to_utc": "2026-10-14T04:08:22.881088+00:00",
+  "osrm_data_version": "Not supplied by public server",
+  "attribution": "\u00a9 OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "cost_definition": "Lengths of OSRM recommended driving routes; not shortest-distance road paths or live-traffic measurements",
+  "access_status": "Map-derived routing points; no field verification of entrances, parking, permits or current opening"
+}

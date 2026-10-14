@@ -1,0 +1,1 @@
+[out:json][timeout:20];(way["name"="Corrales Avenue"](8.474,124.644,8.477,124.648);way(180693017);way(141722276););out geom;
